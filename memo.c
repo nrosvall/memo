@@ -11,7 +11,8 @@ char *get_temp_memo_path();
 int add_note(const char *content, const char *tags);
 int get_next_id();
 int delete_note(int id);
-void show_notes();
+int show_notes();
+int search_notes(char *search);
 void show_last_five();
 FILE *get_memo_file_ptr();
 
@@ -74,7 +75,7 @@ char *read_memo_line(FILE *fp)
 }
 
 /* Simply read all the lines from the ~/.memo file
- * and return the id of the last line.
+ * and return the id of the last line plus one.
  * If the file is missing or is empty, return 0
  * On error, returns -1
  */
@@ -105,6 +106,46 @@ int get_next_id()
 	fclose(fp);
 
 	return id + 1;
+}
+
+/* Show all notes.
+ * Returns the number of notes;
+ * Returns -1 on failure
+ */
+int show_notes()
+{
+	FILE *fp = NULL;
+	char *line;
+	int count = 0;
+
+	fp = get_memo_file_ptr("r");
+
+	if(fp == NULL)
+		return -1;
+
+	while(!feof(fp)) {
+		line = read_memo_line(fp);
+		if(line != NULL && strcmp(line, "") != 0) {
+			printf("%s\n", line);
+			count++;
+		}
+	}
+
+	fclose(fp);
+
+	return count;
+}
+
+int search_notes(char *search)
+{
+
+
+}
+
+void show_last_five()
+{
+
+
 }
 
 /* Delete a note by id.
@@ -260,6 +301,9 @@ int main(int argc, char *argv[])
 {
 	//add_note("Hello from Memo","@sometag");
 	
-	delete_note(2);
+	//delete_note(2);
+
+	int count = show_notes();
+	printf("%d notes found:\n", count);
 	return 0;
 }
