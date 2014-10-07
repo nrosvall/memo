@@ -11,6 +11,7 @@ memo.o: memo.c
 
 clean:
 	rm memo
+	rm *.o
 
 install:
 	cp memo /usr/local/bin/
