@@ -143,7 +143,8 @@ int search_notes(char *search)
 	return 0;
 }
 
-void show_latest(int count)
+/* Show latest n notes */
+void show_latest(int n)
 {
 	FILE *fp = NULL;
 	char *line;
@@ -164,10 +165,10 @@ void show_latest(int count)
 		/* Go to beginning of the file */
 		rewind(fp);
 
-		if(count > lines)
+		if(n > lines)
 			start = lines;
 		else
-			start = lines - count;
+			start = lines - n;
 
 		while(!feof(fp)) {
 			line = read_memo_line(fp);
