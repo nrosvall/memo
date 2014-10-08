@@ -12,11 +12,49 @@ int add_note(const char *content, const char *tags);
 int get_next_id();
 int delete_note(int id);
 int show_notes();
-int search_notes(char *search);
+int count_notes(FILE *fp);
+int search_notes(const char *search);
 void show_latest(int count);
 FILE *get_memo_file_ptr();
 /* Function declarations end */
 
+
+/* Count the lines of the file as a note is always one liner,
+ * lines == note count.
+ *
+ * File pointer is rewinded to the beginning of the file.
+ *
+ * Returns the count or -1 if the file pointer is null.
+ * Caller must close fp after calling the function successfully.
+ */
+int count_notes(FILE *fp)
+{
+	int count = 0;
+	int ch = 0;
+
+	if(!fp)
+		return -1;
+
+	/* Count lines by new line characters */
+	while(!feof(fp)) {
+		ch = fgetc(fp);
+		if(ch == '\n')
+			count++;
+	}
+	/* Go to beginning of the file */
+	rewind(fp);
+
+	/* return the count, ignoring the last empty line */
+	/* "empty line" is because of the sick way I'm using feof. */
+	return count - 1;
+}
+
+
+/* Get open FILE* for ~./memo file.
+ * Returns NULL of failure.
+ * Caller must close the file pointer after calling the function
+ * succesfully.
+ */
 FILE *get_memo_file_ptr(char *mode) 
 {
 	FILE *fp = NULL;
@@ -35,13 +73,14 @@ FILE *get_memo_file_ptr(char *mode)
 	return fp;
 }
 
+
 /* Read a line from the file.
  * Return NULL on failure.
  * Caller is responsible for freeing the return value
  */
 char *read_memo_line(FILE *fp)
 {
-	if(fp == NULL)
+	if(!fp)
 		return NULL;
 
 	int length = 128;
@@ -75,6 +114,7 @@ char *read_memo_line(FILE *fp)
 	return buffer;
 }
 
+
 /* Simply read all the lines from the ~/.memo file
  * and return the id of the last line plus one.
  * If the file is missing or is empty, return 0
@@ -84,30 +124,37 @@ int get_next_id()
 {
 	int id = 0;
 	FILE *fp = NULL;
-	char *last_line = NULL;
+	char *line = NULL;
+	int lines = 0;
+	int current = 0;
 
 	fp = get_memo_file_ptr("r");
 
-	if(fp == NULL)
+	lines = count_notes(fp);
+
+	if(lines == -1)
 		return -1;
 
-	while(!feof(fp)) {
-		last_line = read_memo_line(fp);
-		if(last_line != NULL) {
-			if(strcmp(last_line, "") != 0) {
-				char *endptr;
-				id = strtol(last_line, &endptr, 10);
-			}
-		}
-	}
+	while(1) {
+		line = read_memo_line(fp);
+		/* Check if we're at the last line */
+		if(line && current == lines) {
+			char *endptr;
+			id = strtol(line, &endptr, 10);
+			free(line);
+			break;
+	        }
+		current++;
 
-	if(last_line != NULL)
-		free(last_line);
+		if(line)
+			free(line);
+	}
 
 	fclose(fp);
 
 	return id + 1;
 }
+
 
 /* Show all notes.
  * Returns the number of notes;
@@ -137,11 +184,32 @@ int show_notes()
 	return count;
 }
 
-int search_notes(char *search)
-{
 
-	return 0;
+int search_notes(const char *search)
+{
+	FILE *fp = NULL;
+	int count = 0;
+	const char *line;
+
+	fp = get_memo_file_ptr("r");
+
+	if(fp == NULL)
+		return -1;
+
+	while(!feof(fp)) {
+		line = read_memo_line(fp);
+		if(line != NULL && strcmp(line,"") != 0) {
+			/* Check if the search term matches */
+			if((strstr(line, search)) != NULL)
+				printf("%s\n", line);
+		}
+	}
+
+	fclose(fp);
+
+	return count;
 }
+
 
 /* Show latest n notes */
 void show_latest(int n)
@@ -149,39 +217,35 @@ void show_latest(int n)
 	FILE *fp = NULL;
 	char *line;
 	int lines = 0;
-	int ch = 0;
 	int start;
 	int current = 0;
 
 	fp = get_memo_file_ptr("r");
+	
+	lines = count_notes(fp);
 
-	if(fp != NULL) {
-		/* Count lines by new line characters */
-		while(!feof(fp)) {
-			ch = fgetc(fp);
-			if(ch == '\n')
-				lines++;
-		}
-		/* Go to beginning of the file */
-		rewind(fp);
+	if(lines != -1) {
 
 		if(n > lines)
 			start = lines;
 		else
 			start = lines - n;
 
-		while(!feof(fp)) {
+		while(lines > 0) {
 			line = read_memo_line(fp);
-			if(line != NULL && strcmp(line,"") != 0) {
+			if(line) {
 				if(current >= start)
 					printf("%s\n",line);
-				current++;
+				free(line);
 			}
+			lines--;
+			current++;
 		}
 
 		fclose(fp);
-	}
+	}	
 }
+
 
 /* Delete a note by id.
  * Returns 0 on success and -1 on failure.
@@ -242,6 +306,7 @@ int delete_note(int id)
 	return 0;
 }
 
+
 /*
  * Returns the path to $HOME/.memo file.
  * Caller is responsible for freeing the return value.
@@ -262,6 +327,7 @@ char *get_memo_file_path()
 
 	return path;
 }
+
 
 /* Returns temporary .memo.tmp file.
  * It will be in the same directory
@@ -286,6 +352,7 @@ char *get_temp_memo_path()
 
 	return tmp;
 }
+
 
 /*
  * .memo file format is following:
@@ -331,16 +398,15 @@ int add_note(const char *content, const char *tags)
 }
 
 
-
 int main(int argc, char *argv[])
 {
-	add_note("Hello from Memo","@sometag");
+	add_note("Hello from Memo plaa plaa","@sometag");
 	
 	//delete_note(2);
 
 	//int count = show_notes();
 	//printf("%d notes found:\n", count);
-	//show_latest(4);
+	//show_latest(7);
 
 	return 0;
 }
