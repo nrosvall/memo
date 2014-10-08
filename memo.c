@@ -4,7 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 
-/*Declarations*/
+/* Function declarations */
 char *read_memo_line(FILE *fp);
 char *get_memo_file_path();
 char *get_temp_memo_path();
@@ -13,8 +13,9 @@ int get_next_id();
 int delete_note(int id);
 int show_notes();
 int search_notes(char *search);
-void show_last_five();
+void show_latest(int count);
 FILE *get_memo_file_ptr();
+/* Function declarations end */
 
 FILE *get_memo_file_ptr(char *mode) 
 {
@@ -139,13 +140,46 @@ int show_notes()
 int search_notes(char *search)
 {
 
-
+	return 0;
 }
 
-void show_last_five()
+void show_latest(int count)
 {
+	FILE *fp = NULL;
+	char *line;
+	int lines = 0;
+	int ch = 0;
+	int start;
+	int current = 0;
 
+	fp = get_memo_file_ptr("r");
 
+	if(fp != NULL) {
+		/* Count lines by new line characters */
+		while(!feof(fp)) {
+			ch = fgetc(fp);
+			if(ch == '\n')
+				lines++;
+		}
+		/* Go to beginning of the file */
+		rewind(fp);
+
+		if(count > lines)
+			start = lines;
+		else
+			start = lines - count;
+
+		while(!feof(fp)) {
+			line = read_memo_line(fp);
+			if(line != NULL && strcmp(line,"") != 0) {
+				if(current >= start)
+					printf("%s\n",line);
+				current++;
+			}
+		}
+
+		fclose(fp);
+	}
 }
 
 /* Delete a note by id.
@@ -299,11 +333,13 @@ int add_note(const char *content, const char *tags)
 
 int main(int argc, char *argv[])
 {
-	//add_note("Hello from Memo","@sometag");
+	add_note("Hello from Memo","@sometag");
 	
 	//delete_note(2);
 
-	int count = show_notes();
-	printf("%d notes found:\n", count);
+	//int count = show_notes();
+	//printf("%d notes found:\n", count);
+	//show_latest(4);
+
 	return 0;
 }
