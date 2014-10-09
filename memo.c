@@ -1,14 +1,32 @@
+/* Memo is a Unix-style note taking software. 
+ *
+ * Copyright (c) 2014 Niko Rosvall <niko@newsworm.net>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 
 /* Function declarations */
 char *read_memo_line(FILE *fp);
 char *get_memo_file_path();
 char *get_temp_memo_path();
-int   add_note(const char *content);
+int   add_note(const char *content, int linkid);
 int   get_next_id();
 int   get_longest_line();
 int   delete_note(int id);
@@ -16,10 +34,10 @@ int   show_notes();
 int   count_notes(FILE *fp);
 int   search_notes(const char *search);
 char *export_html();
-int link_notes(int id_from, int id_to);
 void  output_line(char *line);
 void  show_latest(int count);
 FILE *get_memo_file_ptr();
+void usage();
 
 
 /* Count the lines of the file as a note is always one liner,
@@ -449,7 +467,7 @@ char *get_temp_memo_path()
  * sections are separated by a tab
  *
  */
-int add_note(const char *content)
+int add_note(const char *content, int linkid)
 {
 	FILE *fp = NULL;
 	time_t t;
@@ -484,20 +502,75 @@ int add_note(const char *content)
 }
 
 
+void usage()
+{
+	printf("Memo Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>\n");
+	printf("Usage: memo [option]...\n\n");
+	printf("-a <content> [id]\tadd a new note, optionally as a subnote\n");
+	printf("-d <id>\t\t\tdelete note by id\n");
+	printf("-f <search>\t\tfind note by search term\n");
+	printf("-h\t\t\tshow this help\n");
+	printf("-l <n>\t\t\tshow latest n notes\n");
+	printf("-s \t\t\tshow all notes\n");
+
+}
+
+
 int main(int argc, char *argv[])
 {
-	add_note("Hello from Memo shorter");
-	add_note("Hello again but maybe longer");
-	add_note("just this");
-	//delete_note(20);
+	/* Don't link to any note by default */
+	int linkid = 0;
+	int c;
 
-	//int count = show_notes();
-	//printf("%d notes found:\n", count);
-	//show_latest(3);
+	opterr = 0;
 
-	//show_notes();
+	while((c = getopt(argc, argv, "a:d:f:hl:s")) != -1){
+		switch(c){
+		case 'a':
+			if(argv[optind]){
+				if(!isdigit(*argv[optind])){
+					printf("%s must be a digit\n",argv[optind]);
+					break;
+				}
+				linkid = atoi(argv[optind]);
+			}
+			add_note(optarg, linkid);
+			break;
+		case 'd':
+			delete_note(atoi(optarg));
+			break;
+		case 'f':
+			search_notes(optarg);
+			break;
+		case 'h':
+			usage();
+			break;
+		case 'l':
+			show_latest(atoi(optarg));
+			break;
+		case 's':
+			show_notes();
+			break;
+		case '?':
+			if(optopt == 'a')
+				printf("-%c missing an argument <content>\n",optopt);
+			if(optopt == 'd')
+				printf("-%c missing an argument <id>\n",optopt);
+			if(optopt == 'f')
+				printf("-%c missing an argument <search>\n",optopt);
+			if(optopt == 'l')
+				printf("-%c missing an argument <id>\n",optopt);
+			break;
+			
+		default:
+			/* No options available, so get data from stdin.
+			 * Assumes that the data is content for a new note.
+			 * Adds a new note with content from stdin.
+			 */
+			;//stdin here
 
-	//search_notes("tag");
+		}
+	}
 
 	return 0;
 }
