@@ -8,13 +8,13 @@
 char *read_memo_line(FILE *fp);
 char *get_memo_file_path();
 char *get_temp_memo_path();
-int add_note(const char *content, const char *tags);
-int get_next_id();
-int delete_note(int id);
-int show_notes();
-int count_notes(FILE *fp);
-int search_notes(const char *search);
-void show_latest(int count);
+int   add_note(const char *content, const char *tags);
+int   get_next_id();
+int   delete_note(int id);
+int   show_notes();
+int   count_notes(FILE *fp);
+int   search_notes(const char *search);
+void  show_latest(int count);
 FILE *get_memo_file_ptr();
 /* Function declarations end */
 
@@ -74,7 +74,7 @@ FILE *get_memo_file_ptr(char *mode)
 }
 
 
-/* Read a line from the file.
+/* Read a line from the .memo file.
  * Return NULL on failure.
  * Caller is responsible for freeing the return value
  */
@@ -165,18 +165,23 @@ int show_notes()
 	FILE *fp = NULL;
 	char *line;
 	int count = 0;
+	int lines = 0;
 
 	fp = get_memo_file_ptr("r");
 
-	if(fp == NULL)
+	lines = count_notes(fp);
+	count = lines;
+
+	if(lines == -1)
 		return -1;
 
-	while(!feof(fp)) {
+	while(lines >= 0) {
 		line = read_memo_line(fp);
-		if(line != NULL && strcmp(line, "") != 0) {
+		if(line) {
 			printf("%s\n", line);
-			count++;
+			free(line);
 		}
+		lines--;
 	}
 
 	fclose(fp);
@@ -184,25 +189,36 @@ int show_notes()
 	return count;
 }
 
-
+/* Search if a note contains the search term.
+ * Returns the count of found notes or -1 if function fails.
+ */
 int search_notes(const char *search)
 {
 	FILE *fp = NULL;
 	int count = 0;
-	const char *line;
+	char *line;
+	int lines = 0;
 
 	fp = get_memo_file_ptr("r");
 
-	if(fp == NULL)
+	lines = count_notes(fp);
+
+	if(lines == -1)
 		return -1;
 
-	while(!feof(fp)) {
+	while(lines >= 0) {
 		line = read_memo_line(fp);
-		if(line != NULL && strcmp(line,"") != 0) {
+		if(line) {
 			/* Check if the search term matches */
-			if((strstr(line, search)) != NULL)
+			const char *tmp = line;
+			if((strstr(tmp, search)) != NULL) {
 				printf("%s\n", line);
+				count++;
+			}
+
+			free(line);
 		}
+		lines--;
 	}
 
 	fclose(fp);
@@ -225,16 +241,18 @@ void show_latest(int n)
 	lines = count_notes(fp);
 
 	if(lines != -1) {
-
-		if(n > lines)
-			start = lines;
+		/* If n is bigger than the count of lines or smaller
+		 * than zero we will show all the lines.
+		 */
+		if(n > lines || n < 0)
+			start = -1;
 		else
 			start = lines - n;
 
-		while(lines > 0) {
+		while(lines >= 0) {
 			line = read_memo_line(fp);
 			if(line) {
-				if(current >= start)
+				if(current > start)
 					printf("%s\n",line);
 				free(line);
 			}
@@ -256,6 +274,7 @@ int delete_note(int id)
 	FILE *tmpfp = NULL;
 	char *line = NULL;
 	char *tmp;
+	int lines = 0;
 
 	tmp = get_temp_memo_path();
 
@@ -275,20 +294,26 @@ int delete_note(int id)
 	}
 
 	fp = get_memo_file_ptr("r");
+	lines = count_notes(fp);
 
-	if(fp == NULL) {
+	if(lines == -1) {
 		free(memofile);
+		fclose(tmpfp);
 		return -1;
 	}
 
-	while(!feof(fp)) {
+	while(lines >= 0) {
 		line = read_memo_line(fp);
-		if(line != NULL && strcmp(line, "") != 0) {
+		if(line){
 			char *endptr;
 			int curr = strtol(line, &endptr, 10);
+	
 			if(curr != id)
 				fprintf(tmpfp, "%s\n", line);
+
+			free(line);
 		}
+		lines--;
 	}
 	
 	fclose(fp);
@@ -400,13 +425,17 @@ int add_note(const char *content, const char *tags)
 
 int main(int argc, char *argv[])
 {
-	add_note("Hello from Memo plaa plaa","@sometag");
+	//add_note("Hello from Memo foo bar","");
 	
-	//delete_note(2);
+	delete_note(20);
 
 	//int count = show_notes();
 	//printf("%d notes found:\n", count);
-	//show_latest(7);
+	//show_latest(3);
+
+	//show_notes();
+
+	//search_notes("tag");
 
 	return 0;
 }
