@@ -38,6 +38,7 @@ void  show_latest(int count);
 FILE *get_memo_file_ptr();
 void  usage();
 
+#define VERSION 0.3
 
 /* Count the lines of the file as a note is always one liner,
  * lines == note count.
@@ -208,6 +209,7 @@ int show_notes()
 
 	return count;
 }
+
 
 /* Search if a note contains the search term.
  * Returns the count of found notes or -1 if function fails.
@@ -474,13 +476,18 @@ void usage()
 	printf("-f <search>\tfind note by search term\n");
 	printf("-h\t\tshow this help\n");
 	printf("-l <n>\t\tshow latest n notes\n");
-	printf("-s \t\tshow all notes\n\n");
+	printf("-s \t\tshow all notes\n");
+	printf("-v \t\tshow Memo version info\n\n");
 	printf("Examples:\n\n");
-	printf("memo -a \"Remember to buy milk!\"\n");
+	printf("Add a new note:\n");
+	printf("memo -a \"Remember to buy milk!\"\n\n");
 	printf("There was something to buy...Let's search:\n");
 	printf("memo -f buy\n");
 	printf("And the output would be:\n");
-	printf("4\t2014-10-10\tRemember to buy milk\n");
+	printf("4\t2014-10-10\tRemember to buy milk\n\n");
+	printf("It was cheese we needed, not milk. Let's do a replace:\n\n");
+	printf("memo -d 4 -a \"Remember to buy cheese\"\n");
+	printf("This would remove note with id 4 and add a new one.\n\n");
 }
 
 
@@ -490,7 +497,7 @@ int main(int argc, char *argv[])
 
 	opterr = 0;
 
-	while((c = getopt(argc, argv, "a:d:e:f:hl:s")) != -1){
+	while((c = getopt(argc, argv, "a:d:e:f:hl:sv")) != -1){
 		switch(c){
 		case 'a':
 			add_note(optarg);
@@ -513,6 +520,8 @@ int main(int argc, char *argv[])
 		case 's':
 			show_notes();
 			break;
+		case 'v':
+			printf("Memo version %.1f\n", VERSION);
 		case '?':
 			if(optopt == 'a')
 				printf("-a missing an argument <content>\n");
@@ -531,8 +540,7 @@ int main(int argc, char *argv[])
 			 * Assumes that the data is content for a new note.
 			 * Adds a new note with content from stdin.
 			 */
-			;//stdin here
-
+			;
 		}
 	}
 
