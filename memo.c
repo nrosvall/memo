@@ -26,18 +26,17 @@
 char *read_memo_line(FILE *fp);
 char *get_memo_file_path();
 char *get_temp_memo_path();
-int   add_note(const char *content, int linkid);
+int   add_note(const char *content);
 int   get_next_id();
-int   get_longest_line();
 int   delete_note(int id);
 int   show_notes();
 int   count_notes(FILE *fp);
 int   search_notes(const char *search);
-char *export_html();
+char *export_html(const char *path);
 void  output_line(char *line);
 void  show_latest(int count);
 FILE *get_memo_file_ptr();
-void usage();
+void  usage();
 
 
 /* Count the lines of the file as a note is always one liner,
@@ -248,39 +247,6 @@ int search_notes(const char *search)
 }
 
 
-/* Get the longest line of the ~/.memo file. */
-int get_longest_line()
-{
-	FILE *fp = NULL;
-	int lines = 0;
-	char *line = NULL;
-	int longest = 0;
-
-	fp = get_memo_file_ptr("r");
-	lines = count_notes(fp);
-
-	if(lines == -1)
-		return -1;
-
-	while(lines >= 0){
-		line = read_memo_line(fp);
-		if(line){
-			int tmp = strlen(line);
-
-			if(tmp > longest)
-				longest = tmp;
-
-			free(line);
-		}
-		lines--;
-	}
-
-	fclose(fp);
-
-	return longest;
-}
-
-
 /* This functions handles the output of one line.
  * Just a simple wrapper for printf for now.
  * Preserved for the future.
@@ -290,20 +256,16 @@ void output_line(char *line)
 	printf("%s\n", line);
 }
 
+
 /* Export current ~/.memo file to a html file ~/memo.html
  * Return the path of the html file, or NULL on failure.
  */
-char *export_html()
+char *export_html(const char *path)
 {
 
 	return NULL;
 }
 
-int link_notes(int id_from, int id_to)
-{
-
-	return 0;
-}
 
 /* Show latest n notes */
 void show_latest(int n)
@@ -467,7 +429,7 @@ char *get_temp_memo_path()
  * sections are separated by a tab
  *
  */
-int add_note(const char *content, int linkid)
+int add_note(const char *content)
 {
 	FILE *fp = NULL;
 	time_t t;
@@ -506,38 +468,38 @@ void usage()
 {
 	printf("Memo Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>\n");
 	printf("Usage: memo [option]...\n\n");
-	printf("-a <content> [id]\tadd a new note, optionally as a subnote\n");
-	printf("-d <id>\t\t\tdelete note by id\n");
-	printf("-f <search>\t\tfind note by search term\n");
-	printf("-h\t\t\tshow this help\n");
-	printf("-l <n>\t\t\tshow latest n notes\n");
-	printf("-s \t\t\tshow all notes\n");
-
+	printf("-a <content>\tadd a new note\n");
+	printf("-d <id>\t\tdelete note by id\n");
+	printf("-e <path>\texport notes as html to a file\n");
+	printf("-f <search>\tfind note by search term\n");
+	printf("-h\t\tshow this help\n");
+	printf("-l <n>\t\tshow latest n notes\n");
+	printf("-s \t\tshow all notes\n\n");
+	printf("Examples:\n\n");
+	printf("memo -a \"Remember to buy milk!\"\n");
+	printf("There was something to buy...Let's search:\n");
+	printf("memo -f buy\n");
+	printf("And the output would be:\n");
+	printf("4\t2014-10-10\tRemember to buy milk\n");
 }
 
 
 int main(int argc, char *argv[])
 {
-	/* Don't link to any note by default */
-	int linkid = 0;
 	int c;
 
 	opterr = 0;
 
-	while((c = getopt(argc, argv, "a:d:f:hl:s")) != -1){
+	while((c = getopt(argc, argv, "a:d:e:f:hl:s")) != -1){
 		switch(c){
 		case 'a':
-			if(argv[optind]){
-				if(!isdigit(*argv[optind])){
-					printf("%s must be a digit\n",argv[optind]);
-					break;
-				}
-				linkid = atoi(argv[optind]);
-			}
-			add_note(optarg, linkid);
+			add_note(optarg);
 			break;
 		case 'd':
 			delete_note(atoi(optarg));
+			break;
+		case 'e':
+			export_html(optarg);
 			break;
 		case 'f':
 			search_notes(optarg);
@@ -553,13 +515,15 @@ int main(int argc, char *argv[])
 			break;
 		case '?':
 			if(optopt == 'a')
-				printf("-%c missing an argument <content>\n",optopt);
+				printf("-a missing an argument <content>\n");
 			if(optopt == 'd')
-				printf("-%c missing an argument <id>\n",optopt);
+				printf("-d missing an argument <id>\n");
+			if(optopt == 'e')
+				printf("-e missing an argument <path>\n");
 			if(optopt == 'f')
-				printf("-%c missing an argument <search>\n",optopt);
+				printf("-f missing an argument <search>\n");
 			if(optopt == 'l')
-				printf("-%c missing an argument <id>\n",optopt);
+				printf("-l missing an argument <id>\n");
 			break;
 			
 		default:
