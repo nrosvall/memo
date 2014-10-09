@@ -8,15 +8,18 @@
 char *read_memo_line(FILE *fp);
 char *get_memo_file_path();
 char *get_temp_memo_path();
-int   add_note(const char *content, const char *tags);
+int   add_note(const char *content);
 int   get_next_id();
+int   get_longest_line();
 int   delete_note(int id);
 int   show_notes();
 int   count_notes(FILE *fp);
 int   search_notes(const char *search);
+char *export_html();
+int link_notes(int id_from, int id_to);
+void  output_line(char *line);
 void  show_latest(int count);
 FILE *get_memo_file_ptr();
-/* Function declarations end */
 
 
 /* Count the lines of the file as a note is always one liner,
@@ -178,7 +181,7 @@ int show_notes()
 	while(lines >= 0) {
 		line = read_memo_line(fp);
 		if(line) {
-			printf("%s\n", line);
+			output_line(line);
 			free(line);
 		}
 		lines--;
@@ -208,11 +211,11 @@ int search_notes(const char *search)
 
 	while(lines >= 0) {
 		line = read_memo_line(fp);
-		if(line) {
+		if(line){
 			/* Check if the search term matches */
 			const char *tmp = line;
-			if((strstr(tmp, search)) != NULL) {
-				printf("%s\n", line);
+			if((strstr(tmp, search)) != NULL){
+				output_line(line);
 				count++;
 			}
 
@@ -226,6 +229,63 @@ int search_notes(const char *search)
 	return count;
 }
 
+
+/* Get the longest line of the ~/.memo file. */
+int get_longest_line()
+{
+	FILE *fp = NULL;
+	int lines = 0;
+	char *line = NULL;
+	int longest = 0;
+
+	fp = get_memo_file_ptr("r");
+	lines = count_notes(fp);
+
+	if(lines == -1)
+		return -1;
+
+	while(lines >= 0){
+		line = read_memo_line(fp);
+		if(line){
+			int tmp = strlen(line);
+
+			if(tmp > longest)
+				longest = tmp;
+
+			free(line);
+		}
+		lines--;
+	}
+
+	fclose(fp);
+
+	return longest;
+}
+
+
+/* This functions handles the output of one line.
+ * Just a simple wrapper for printf for now.
+ * Preserved for the future.
+ */
+void output_line(char *line)
+{
+	printf("%s\n", line);
+}
+
+/* Export current ~/.memo file to a html file ~/memo.html
+ * Return the path of the html file, or NULL on failure.
+ */
+char *export_html()
+{
+
+	return NULL;
+}
+
+int link_notes(int id_from, int id_to)
+{
+
+	return 0;
+}
 
 /* Show latest n notes */
 void show_latest(int n)
@@ -253,7 +313,7 @@ void show_latest(int n)
 			line = read_memo_line(fp);
 			if(line) {
 				if(current > start)
-					printf("%s\n",line);
+					output_line(line);
 				free(line);
 			}
 			lines--;
@@ -382,14 +442,14 @@ char *get_temp_memo_path()
 /*
  * .memo file format is following:
  *
- * id     date           content         tags
- * |      |              |               |
- * |- id  |- yyy-MM-dd   |- actual note  |- tags, semicolon separated
+ * id     date           content       
+ * |      |              |             
+ * |- id  |- yyy-MM-dd   |- actual note
  *
  * sections are separated by a tab
  *
  */
-int add_note(const char *content, const char *tags)
+int add_note(const char *content)
 {
 	FILE *fp = NULL;
 	time_t t;
@@ -411,11 +471,12 @@ int add_note(const char *content, const char *tags)
 	id = get_next_id();
 
 	if(id == -1){
-		printf("Problem getting an id for the note.\n");
-	} else {
-		strftime(date, 80, "%Y-%m-%d", ti);
-		fprintf(fp, "%d\t%s\t%s\t%s\n", id, date, content, tags);
-	}
+		id = 1;
+	} 
+	
+	strftime(date, 80, "%Y-%m-%d", ti);
+	fprintf(fp, "%d\t%s\t%s\n", id, date, content);
+	
 
 	fclose(fp);
 
@@ -425,9 +486,10 @@ int add_note(const char *content, const char *tags)
 
 int main(int argc, char *argv[])
 {
-	//add_note("Hello from Memo foo bar","");
-	
-	delete_note(20);
+	add_note("Hello from Memo shorter");
+	add_note("Hello again but maybe longer");
+	add_note("just this");
+	//delete_note(20);
 
 	//int count = show_notes();
 	//printf("%d notes found:\n", count);
