@@ -33,12 +33,12 @@ int   delete_note(int id);
 int   show_notes();
 int   count_notes(FILE *fp);
 int   search_notes(const char *search);
-char *export_html(const char *path);
+const char *export_html(const char *path);
 void  output_line(char *line);
 void  show_latest(int count);
 FILE *get_memo_file_ptr();
 void  usage();
-void fail(FILE *out, const char *fmt, ...);
+void  fail(FILE *out, const char *fmt, ...);
 
 #define VERSION 0.3
 
@@ -291,13 +291,54 @@ void output_line(char *line)
 }
 
 
-/* Export current ~/.memo file to a html file ~/memo.html
+/* Export current ~/.memo file to a html file
  * Return the path of the html file, or NULL on failure.
  */
-char *export_html(const char *path)
+const char *export_html(const char *path)
 {
+	FILE *fp = NULL;
+	FILE *fpm = NULL;
+	char *line = NULL;
+	int lines = 0;
 
-	return NULL;
+	fp = fopen(path, "w");
+	
+	if(!fp) {
+		fail(stderr, "%s: failed to open %s", __func__, path);
+		return NULL;
+	}
+
+	fpm = get_memo_file_ptr("r");
+	lines = count_notes(fpm);
+
+	if(lines == -1) {
+		fail(stderr, "%s: counting lines failed", __func__);
+		return NULL;
+	}
+	
+	fprintf(fp,"<!DOCTYPE html>\n");
+	fprintf(fp, "<html>\n<head>\n");
+	fprintf(fp, "<meta charset=\"UTF-8\">\n");
+	fprintf(fp, "<title>Memo notes</title>\n");
+	fprintf(fp, "<style>pre{font-family: sans-serif;}</style>\n");
+	fprintf(fp, "</head>\n<body>\n");
+	fprintf(fp, "<h1>Notes from Memo</h1>\n");
+	fprintf(fp, "<table>\n");
+
+	while(lines >= 0){
+		line = read_memo_line(fpm);
+		if(line){
+			fprintf(fp, "<tr><td><pre>%s</pre></td></tr>\n", line);
+			free(line);
+		}
+		lines--;
+	}
+
+	fprintf(fp, "</table>\n</body>\n</html>\n");
+	fclose(fp);
+	fclose(fpm);
+
+	return path;
 }
 
 
