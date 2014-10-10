@@ -94,8 +94,7 @@ FILE *get_memo_file_ptr(char *mode)
 	return fp;
 }
 
-
-/* Read a line from the .memo file.
+/* Reads a line from source pointed by FILE*.
  * Return NULL on failure.
  * Caller is responsible for freeing the return value
  */
@@ -105,8 +104,10 @@ char *read_memo_line(FILE *fp)
 		return NULL;
 
 	int length = 128;
-	char *buffer = (char*)malloc(sizeof(char) * length);
+	char *buffer = NULL;
 	
+	buffer = (char*)malloc(sizeof(char) * length);
+
 	if(buffer == NULL)
 		return NULL;
 
@@ -494,8 +495,20 @@ void usage()
 int main(int argc, char *argv[])
 {
 	int c;
+	char *stdinline = NULL;
 
 	opterr = 0;
+
+	if(argc == 1){
+	       /* No options available, so get data from stdin.
+		* Assumes that the data is content for a new note.
+		*/
+		stdinline = read_memo_line(stdin);
+		if(stdinline){
+			add_note(stdinline);
+			free(stdinline);
+		}
+	}
 
 	while((c = getopt(argc, argv, "a:d:e:f:hl:sv")) != -1){
 		switch(c){
@@ -533,14 +546,7 @@ int main(int argc, char *argv[])
 				printf("-f missing an argument <search>\n");
 			if(optopt == 'l')
 				printf("-l missing an argument <id>\n");
-			break;
-			
-		default:
-			/* No options available, so get data from stdin.
-			 * Assumes that the data is content for a new note.
-			 * Adds a new note with content from stdin.
-			 */
-			;
+			break;	
 		}
 	}
 
