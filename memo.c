@@ -143,8 +143,12 @@ char *read_memo_line(FILE *fp)
 		if(count == length){
 			length += 128;
 			buffer = realloc(buffer, length);
-			if(buffer == NULL)
+			if(buffer == NULL){
+				fail(stderr,
+					"%s: realloc failed\n",
+					__func__);
 				return NULL;
+			}
 		}
 		buffer[count] = ch;
 		count++;
@@ -279,7 +283,7 @@ int search_notes(const char *search)
 
 /* This functions handles the output of one line.
  * Just a simple wrapper for printf for now.
- * Preserved for the future.
+ * Preserved for the future use.
  */
 void output_line(char *line)
 {
@@ -470,8 +474,7 @@ char *get_temp_memo_path()
  * |      |              |             
  * |- id  |- yyy-MM-dd   |- actual note
  *
- * sections are separated by a tab
- *
+ * sections are separated by a tab character
  */
 int add_note(const char *content)
 {
@@ -535,6 +538,7 @@ void usage()
 }
 
 
+/* Program entry point */
 int main(int argc, char *argv[])
 {
 	int c;
