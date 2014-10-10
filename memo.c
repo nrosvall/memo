@@ -21,6 +21,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 /* Function declarations */
 char *read_memo_line(FILE *fp);
@@ -37,6 +38,7 @@ void  output_line(char *line);
 void  show_latest(int count);
 FILE *get_memo_file_ptr();
 void  usage();
+void fail(FILE *out, const char *fmt, ...);
 
 #define VERSION 0.3
 
@@ -53,8 +55,10 @@ int count_notes(FILE *fp)
 	int count = 0;
 	int ch = 0;
 
-	if(!fp)
+	if(!fp){
+		fail(stderr,"%s: NULL file pointer\n", __func__);
 		return -1;
+	}
 
 	/* Count lines by new line characters */
 	while(!feof(fp)) {
@@ -71,6 +75,16 @@ int count_notes(FILE *fp)
 }
 
 
+/* A simple error reporting function */
+void fail(FILE *out, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(out, fmt, ap);
+	va_end(ap);
+}
+
+
 /* Get open FILE* for ~./memo file.
  * Returns NULL of failure.
  * Caller must close the file pointer after calling the function
@@ -81,13 +95,18 @@ FILE *get_memo_file_ptr(char *mode)
 	FILE *fp = NULL;
 	char *path = get_memo_file_path();
 
-	if(path == NULL)
+	if(path == NULL){
+		fail(stderr,"%s: error getting ~./memo path\n", 
+			__func__);
 		return NULL;
+	}
 	
 	fp = fopen(path, mode);
 
-	if(fp == NULL)
+	if(fp == NULL){
+		fail(stderr,"%s: error opening %s\n", __func__, path);
 		return NULL;
+	}
 
 	free(path);
 
@@ -108,8 +127,10 @@ char *read_memo_line(FILE *fp)
 	
 	buffer = (char*)malloc(sizeof(char) * length);
 
-	if(buffer == NULL)
+	if(buffer == NULL){
+		fail(stderr,"%s: malloc failed\n", __func__);
 		return NULL;
+	}
 
 	int count = 0;
 
@@ -154,8 +175,10 @@ int get_next_id()
 
 	lines = count_notes(fp);
 
-	if(lines == -1)
+	if(lines == -1) {
+		fail(stderr,"%s: counting lines failed\n", __func__);
 		return -1;
+	}
 
 	while(1) {
 		line = read_memo_line(fp);
@@ -194,8 +217,10 @@ int show_notes()
 	lines = count_notes(fp);
 	count = lines;
 
-	if(lines == -1)
+	if(lines == -1){
+		fail(stderr,"%s: counting lines failed\n", __func__);
 		return -1;
+	}
 
 	while(lines >= 0) {
 		line = read_memo_line(fp);
@@ -226,8 +251,10 @@ int search_notes(const char *search)
 
 	lines = count_notes(fp);
 
-	if(lines == -1)
+	if(lines == -1){
+		fail(stderr,"%s: counting lines failed\n", __func__);
 		return -1;
+	}
 
 	while(lines >= 0) {
 		line = read_memo_line(fp);
@@ -304,7 +331,8 @@ void show_latest(int n)
 		}
 
 		fclose(fp);
-	}	
+	} else
+		fail(stderr,"%s: counting lines failed\n", __func__);	
 }
 
 
@@ -321,17 +349,23 @@ int delete_note(int id)
 
 	tmp = get_temp_memo_path();
 
-	if(tmp == NULL)
+	if(tmp == NULL) {
+		fail(stderr,"%s: error getting a temp file\n", __func__);
 		return -1;
+	}
 
 	char *memofile = get_memo_file_path();
 
-	if(memofile == NULL)
+	if(memofile == NULL) {
+		fail(stderr,"%s: failed to get ~/.memo file path\n", 
+			__func__);
 		return -1;
+	}
 
 	tmpfp = fopen(tmp, "w");
 
 	if(tmpfp == NULL) {
+		fail(stderr,"%s: error opening %s\n", __func__, tmp);
 		free(memofile);
 		return -1;
 	}
@@ -342,6 +376,7 @@ int delete_note(int id)
 	if(lines == -1) {
 		free(memofile);
 		fclose(tmpfp);
+		fail(stderr,"%s: counting lines failed\n", __func__);
 		return -1;
 	}
 
@@ -384,11 +419,15 @@ char *get_memo_file_path()
 	char *env = getenv("HOME");
 	char *path = (char*)malloc(1024 * sizeof(char));
 
-	if(path == NULL)
+	if(path == NULL) {
+		fail(stderr,"%s: malloc failed\n", __func__);
 		return NULL;
+	}
 
-	if(env == NULL)
+	if(env == NULL){
+		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
 		return NULL;
+	}
 	
 	strcpy(path, env);
 	strcat(path, "/.memo");
@@ -412,8 +451,10 @@ char *get_temp_memo_path()
 
 	char *tmp = (char*)malloc(sizeof(char) * (strlen(orig) + 5));
 
-	if(tmp == NULL)
+	if(tmp == NULL) {
+		fail(stderr,"%s: malloc failed\n", __func__);
 		return NULL;
+	}
 
 	strcpy(tmp, orig);
 	strcat(tmp, ".tmp");
@@ -444,7 +485,7 @@ int add_note(const char *content)
 	fp = get_memo_file_ptr("a");
 
 	if(fp == NULL){
-		printf("Error opening ~/.memo\n");
+		fail(stderr,"%s: Error opening ~/.memo\n", __func__);
 		return -1;
 	}
 
@@ -486,9 +527,11 @@ void usage()
 	printf("memo -f buy\n");
 	printf("And the output would be:\n");
 	printf("4\t2014-10-10\tRemember to buy milk\n\n");
-	printf("It was cheese we needed, not milk. Let's do a replace:\n\n");
+	printf("It was cheese we needed, not milk. Let's do a replace:\n");
 	printf("memo -d 4 -a \"Remember to buy cheese\"\n");
 	printf("This would remove note with id 4 and add a new one.\n\n");
+	printf("Memo also supports adding a note from stdin. For example:\n");
+	printf("echo \"My new note\" | memo\n\n");
 }
 
 
@@ -496,6 +539,7 @@ int main(int argc, char *argv[])
 {
 	int c;
 	char *stdinline = NULL;
+	int has_valid_options = 0;
 
 	opterr = 0;
 
@@ -511,6 +555,7 @@ int main(int argc, char *argv[])
 	}
 
 	while((c = getopt(argc, argv, "a:d:e:f:hl:sv")) != -1){
+		has_valid_options = 1;
 		switch(c){
 		case 'a':
 			add_note(optarg);
@@ -538,17 +583,22 @@ int main(int argc, char *argv[])
 		case '?':
 			if(optopt == 'a')
 				printf("-a missing an argument <content>\n");
-			if(optopt == 'd')
+			else if(optopt == 'd')
 				printf("-d missing an argument <id>\n");
-			if(optopt == 'e')
+			else if(optopt == 'e')
 				printf("-e missing an argument <path>\n");
-			if(optopt == 'f')
+			else if(optopt == 'f')
 				printf("-f missing an argument <search>\n");
-			if(optopt == 'l')
+			else if(optopt == 'l')
 				printf("-l missing an argument <id>\n");
-			break;	
+			else
+				printf("invalid option, see memo -h for help\n");
+			break;
 		}
 	}
+
+	if(argc > 1 && !has_valid_options)
+		printf("invalid input, see memo -h for help\n");
 
 	return 0;
 }
