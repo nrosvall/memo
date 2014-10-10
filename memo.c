@@ -13,6 +13,21 @@
  * GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * memo.c implements a flexible, Unix-style note taking software.
+ *
+ * If you're interested hacking Memo, please remember:
+ * coding style is pretty much the same as for Linux kernel.
+ * see https://www.kernel.org/doc/Documentation/CodingStyle
+ *
+ * When adding features, please consider if they can be
+ * accomplished in a sane way with standard unix tools instead.
+ *
+ * If you port Memo for another platform, please let me know,
+ * no reason for that other than it's nice to know where Memo runs.
+ * Memo should be fairly portable for POSIX systems. I don't know
+ * about Windows...uninstd.h is not natively available for it(?).
  */
 
 #include <stdio.h>
@@ -328,7 +343,8 @@ const char *export_html(const char *path)
 	while(lines >= 0){
 		line = read_memo_line(fpm);
 		if(line){
-			fprintf(fp, "<tr><td><pre>%s</pre></td></tr>\n", line);
+			fprintf(fp, "<tr><td><pre>%s</pre></td></tr>\n",
+				line);
 			free(line);
 		}
 		lines--;
@@ -395,7 +411,8 @@ int delete_note(int id)
 	tmp = get_temp_memo_path();
 
 	if(tmp == NULL) {
-		fail(stderr,"%s: error getting a temp file\n", __func__);
+		fail(stderr,"%s: error getting a temp file\n", 
+			__func__);
 		return -1;
 	}
 
