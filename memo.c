@@ -55,7 +55,7 @@ FILE *get_memo_file_ptr();
 void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 
-#define VERSION 0.3
+#define VERSION 0.6
 
 /* Count the lines of the file as a note is always one liner,
  * lines == note count.
@@ -94,6 +94,7 @@ int count_notes(FILE *fp)
 void fail(FILE *out, const char *fmt, ...)
 {
 	va_list ap;
+
 	va_start(ap, fmt);
 	vfprintf(out, fmt, ap);
 	va_end(ap);
@@ -319,7 +320,7 @@ const char *export_html(const char *path)
 	fp = fopen(path, "w");
 	
 	if(!fp) {
-		fail(stderr, "%s: failed to open %s", __func__, path);
+		fail(stderr, "%s: failed to open %s\n", __func__, path);
 		return NULL;
 	}
 
@@ -327,7 +328,7 @@ const char *export_html(const char *path)
 	lines = count_notes(fpm);
 
 	if(lines == -1) {
-		fail(stderr, "%s: counting lines failed", __func__);
+		fail(stderr, "%s: counting lines failed\n", __func__);
 		return NULL;
 	}
 	
