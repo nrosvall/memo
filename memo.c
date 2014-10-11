@@ -515,12 +515,15 @@ char *get_temp_memo_path()
 	char *tmp = (char*)malloc(sizeof(char) * (strlen(orig) + 5));
 
 	if(tmp == NULL) {
+		free(orig);
 		fail(stderr,"%s: malloc failed\n", __func__);
 		return NULL;
 	}
 
 	strcpy(tmp, orig);
 	strcat(tmp, ".tmp");
+
+	free(orig);
 
 	return tmp;
 }
