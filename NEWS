@@ -1,0 +1,5 @@
+0.6: 2014-10-11
+	Initial release. Memo was originally implemented in Java,
+	but that was an ugly hack. Version 0.6 is now rewritten in C99
+	and has proper support for reading from stdin among other things.
+
