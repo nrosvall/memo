@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <fcntl.h>
 
 /* Function declarations */
 char *read_memo_line(FILE *fp);
@@ -54,8 +55,10 @@ void  show_latest(int count);
 FILE *get_memo_file_ptr();
 void  usage();
 void  fail(FILE *out, const char *fmt, ...);
+int   delete_all();
 
 #define VERSION 0.6
+
 
 /* Count the lines of the file as a note is always one liner,
  * lines == note count.
@@ -75,18 +78,21 @@ int count_notes(FILE *fp)
 		return -1;
 	}
 
-	/* Count lines by new line characters */
+        /* Count lines by new line characters */
 	while(!feof(fp)) {
 		ch = fgetc(fp);
 		if(ch == '\n')
 			count++;
 	}
-	/* Go to beginning of the file */
+        /* Go to beginning of the file */
 	rewind(fp);
 
-	/* return the count, ignoring the last empty line */
-	/* "empty line" is because of the sick way I'm using feof. */
-	return count - 1;
+        /* return the count, ignoring the last empty line */
+        /* "empty line" is because of the sick way I'm using feof. */
+	if(count == 0)
+		return count;
+	else
+		return count - 1;
 }
 
 
@@ -398,6 +404,29 @@ void show_latest(int n)
 }
 
 
+/* Deletes all notes. Function actually
+ * simply removes ~/.memo file.
+ * Returns 0 on success, -1 on failure.
+ */
+int delete_all()
+{
+	char *path = get_memo_file_path();
+
+	if(path == NULL) {
+		fail(stderr,"%s error getting .memo file path\n", __func__);
+		return -1;
+	}
+
+	if(remove(path) != 0){
+		fail(stderr,"%s error removing %s\n", __func__, path);	
+	}
+
+	free(path);
+
+	return 0;
+}
+
+
 /* Delete a note by id.
  * Returns 0 on success and -1 on failure.
  */
@@ -579,6 +608,7 @@ void usage()
 	printf("Usage: memo [option]...\n\n");
 	printf("-a <content>\tadd a new note\n");
 	printf("-d <id>\t\tdelete note by id\n");
+	printf("-D\t\tdelete all notes\n");
 	printf("-e <path>\texport notes as html to a file\n");
 	printf("-f <search>\tfind note by search term\n");
 	printf("-h\t\tshow this help\n");
@@ -603,9 +633,30 @@ void usage()
 /* Program entry point */
 int main(int argc, char *argv[])
 {
+	char *path = NULL;
 	int c;
 	char *stdinline = NULL;
 	int has_valid_options = 0;
+
+	path = get_memo_file_path();
+
+	if(path == NULL)
+		return -1;
+
+	if(access(path,F_OK) != 0){
+		int fd = open(path, O_RDWR | O_CREAT, 
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+		free(path);
+
+		if(fd == -1){
+			fail(stderr,"%s: failed to create empty memo\n",
+				__func__);
+			return -1;
+		}
+
+		close(fd);
+	}
 
 	opterr = 0;
 
@@ -620,7 +671,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while((c = getopt(argc, argv, "a:d:e:f:hl:sv")) != -1){
+	while((c = getopt(argc, argv, "a:d:De:f:hl:sv")) != -1){
 		has_valid_options = 1;
 		switch(c){
 		case 'a':
@@ -628,6 +679,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'd':
 			delete_note(atoi(optarg));
+			break;
+		case 'D':
+			delete_all();
 			break;
 		case 'e':
 			export_html(optarg);
