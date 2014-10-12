@@ -81,9 +81,11 @@ int count_notes(FILE *fp)
         /* Count lines by new line characters */
 	while (!feof(fp)) {
 		ch = fgetc(fp);
+
 		if (ch == '\n')
 			count++;
 	}
+
         /* Go to beginning of the file */
 	rewind(fp);
 
@@ -165,6 +167,7 @@ char *read_memo_line(FILE *fp)
 		if (count == length) {
 			length += 128;
 			buffer = realloc(buffer, length);
+
 			if (buffer == NULL) {
 				fail(stderr,
 					"%s: realloc failed\n",
@@ -172,6 +175,7 @@ char *read_memo_line(FILE *fp)
 				return NULL;
 			}
 		}
+
 		buffer[count] = ch;
 		count++;
 		ch = getc(fp);
@@ -208,6 +212,7 @@ int get_next_id()
 
 	while (1) {
 		line = read_memo_line(fp);
+
 		/* Check if we're at the last line */
 		if (line && current == lines) {
 			char *endptr;
@@ -215,6 +220,7 @@ int get_next_id()
 			free(line);
 			break;
 	        }
+
 		current++;
 
 		if (line)
@@ -250,10 +256,12 @@ int show_notes()
 
 	while (lines >= 0) {
 		line = read_memo_line(fp);
+
 		if (line) {
 			output_line(line);
 			free(line);
 		}
+
 		lines--;
 	}
 
@@ -284,9 +292,11 @@ int search_notes(const char *search)
 
 	while (lines >= 0) {
 		line = read_memo_line(fp);
+
 		if (line){
 			/* Check if the search term matches */
 			const char *tmp = line;
+
 			if ((strstr(tmp, search)) != NULL){
 				output_line(line);
 				count++;
@@ -294,6 +304,7 @@ int search_notes(const char *search)
 
 			free(line);
 		}
+
 		lines--;
 	}
 
@@ -349,11 +360,13 @@ const char *export_html(const char *path)
 
 	while (lines >= 0) {
 		line = read_memo_line(fpm);
+
 		if (line) {
 			fprintf(fp, "<tr><td><pre>%s</pre></td></tr>\n",
 				line);
 			free(line);
 		}
+
 		lines--;
 	}
 
@@ -389,11 +402,13 @@ void show_latest(int n)
 
 		while (lines >= 0) {
 			line = read_memo_line(fp);
+
 			if (line) {
 				if (current > start)
 					output_line(line);
 				free(line);
 			}
+
 			lines--;
 			current++;
 		}
@@ -474,6 +489,7 @@ int delete_note(int id)
 
 	while (lines >= 0) {
 		line = read_memo_line(fp);
+
 		if (line) {
 			char *endptr;
 			int curr = strtol(line, &endptr, 10);
@@ -483,6 +499,7 @@ int delete_note(int id)
 
 			free(line);
 		}
+
 		lines--;
 	}
 	
@@ -665,6 +682,7 @@ int main(int argc, char *argv[])
 		* Assumes that the data is content for a new note.
 		*/
 		stdinline = read_memo_line(stdin);
+
 		if (stdinline) {
 			add_note(stdinline);
 			free(stdinline);
@@ -673,6 +691,7 @@ int main(int argc, char *argv[])
 
 	while ((c = getopt(argc, argv, "a:d:De:f:hl:sv")) != -1){
 		has_valid_options = 1;
+
 		switch(c){
 		case 'a':
 			add_note(optarg);
