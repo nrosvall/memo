@@ -744,6 +744,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'V':
 			printf("Memo version %.1f\n", VERSION);
+			break;
 		case '?':
 			if (optopt == 'a')
 				printf("-a missing an argument <content>\n");
