@@ -2,4 +2,7 @@
 	Initial release. Memo was originally implemented in Java,
 	but that was an ugly hack. Version 0.6 is now rewritten in C99
 	and has proper support for reading from stdin among other things.
+     2014-10-12
+        Added "delete all" option. Also fixed unnecessary errors when ~/.memo
+        does not exist.
 
