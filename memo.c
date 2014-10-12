@@ -1,7 +1,7 @@
-/* Memo is a Unix-style note taking software. 
+/* Memo is a Unix-style note taking software.
  *
  * Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -114,17 +114,17 @@ void fail(FILE *out, const char *fmt, ...)
  * Caller must close the file pointer after calling the function
  * succesfully.
  */
-FILE *get_memo_file_ptr(char *mode) 
+FILE *get_memo_file_ptr(char *mode)
 {
 	FILE *fp = NULL;
 	char *path = get_memo_file_path();
 
 	if (path == NULL) {
-		fail(stderr,"%s: error getting ~./memo path\n", 
+		fail(stderr,"%s: error getting ~./memo path\n",
 			__func__);
 		return NULL;
 	}
-	
+
 	fp = fopen(path, mode);
 
 	if (fp == NULL) {
@@ -148,7 +148,7 @@ char *read_memo_line(FILE *fp)
 
 	int length = 128;
 	char *buffer = NULL;
-	
+
 	buffer = (char*)malloc(sizeof(char) * length);
 
 	if (buffer == NULL) {
@@ -193,7 +193,7 @@ char *read_memo_line(FILE *fp)
  * If the file is missing or is empty, return 0
  * On error, returns -1
  */
-int get_next_id() 
+int get_next_id()
 {
 	int id = 0;
 	FILE *fp = NULL;
@@ -335,7 +335,7 @@ const char *export_html(const char *path)
 	int lines = 0;
 
 	fp = fopen(path, "w");
-	
+
 	if (!fp) {
 		fail(stderr, "%s: failed to open %s\n", __func__, path);
 		return NULL;
@@ -348,7 +348,7 @@ const char *export_html(const char *path)
 		fail(stderr, "%s: counting lines failed\n", __func__);
 		return NULL;
 	}
-	
+
 	fprintf(fp,"<!DOCTYPE html>\n");
 	fprintf(fp, "<html>\n<head>\n");
 	fprintf(fp, "<meta charset=\"UTF-8\">\n");
@@ -388,7 +388,7 @@ void show_latest(int n)
 	int current = 0;
 
 	fp = get_memo_file_ptr("r");
-	
+
 	lines = count_notes(fp);
 
 	if (lines != -1) {
@@ -415,7 +415,7 @@ void show_latest(int n)
 
 		fclose(fp);
 	} else
-		fail(stderr,"%s: counting lines failed\n", __func__);	
+		fail(stderr,"%s: counting lines failed\n", __func__);
 }
 
 
@@ -433,7 +433,7 @@ int delete_all()
 	}
 
 	if (remove(path) != 0) {
-		fail(stderr,"%s error removing %s\n", __func__, path);	
+		fail(stderr,"%s error removing %s\n", __func__, path);
 	}
 
 	free(path);
@@ -445,7 +445,7 @@ int delete_all()
 /* Delete a note by id.
  * Returns 0 on success and -1 on failure.
  */
-int delete_note(int id) 
+int delete_note(int id)
 {
 	FILE *fp = NULL;
 	FILE *tmpfp = NULL;
@@ -456,7 +456,7 @@ int delete_note(int id)
 	tmp = get_temp_memo_path();
 
 	if (tmp == NULL) {
-		fail(stderr,"%s: error getting a temp file\n", 
+		fail(stderr,"%s: error getting a temp file\n",
 			__func__);
 		return -1;
 	}
@@ -464,7 +464,7 @@ int delete_note(int id)
 	char *memofile = get_memo_file_path();
 
 	if (memofile == NULL) {
-		fail(stderr,"%s: failed to get ~/.memo file path\n", 
+		fail(stderr,"%s: failed to get ~/.memo file path\n",
 			__func__);
 		return -1;
 	}
@@ -493,7 +493,7 @@ int delete_note(int id)
 		if (line) {
 			char *endptr;
 			int curr = strtol(line, &endptr, 10);
-	
+
 			if (curr != id)
 				fprintf(tmpfp, "%s\n", line);
 
@@ -502,7 +502,7 @@ int delete_note(int id)
 
 		lines--;
 	}
-	
+
 	fclose(fp);
 	fclose(tmpfp);
 
@@ -511,7 +511,7 @@ int delete_note(int id)
 
 	rename(tmp, memofile);
 	remove(tmp);
-	
+
 	free(memofile);
 	free(tmp);
 
@@ -523,7 +523,7 @@ int delete_note(int id)
  * Returns the path to $HOME/.memo file.
  * Caller is responsible for freeing the return value.
  */
-char *get_memo_file_path() 
+char *get_memo_file_path()
 {
 	char *env = getenv("HOME");
 	char *path = (char*)malloc(1024 * sizeof(char));
@@ -537,7 +537,7 @@ char *get_memo_file_path()
 		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
 		return NULL;
 	}
-	
+
 	strcpy(path, env);
 	strcat(path, "/.memo");
 
@@ -578,8 +578,8 @@ char *get_temp_memo_path()
 /*
  * .memo file format is following:
  *
- * id     date           content       
- * |      |              |             
+ * id     date           content
+ * |      |              |
  * |- id  |- yyy-MM-dd   |- actual note
  *
  * sections are separated by a tab character
@@ -602,16 +602,16 @@ int add_note(const char *content)
 
 	time(&t);
 	ti = localtime(&t);
-	
+
 	id = get_next_id();
 
 	if (id == -1) {
 		id = 1;
-	} 
-	
+	}
+
 	strftime(date, 80, "%Y-%m-%d", ti);
 	fprintf(fp, "%d\t%s\t%s\n", id, date, content);
-	
+
 
 	fclose(fp);
 
@@ -686,7 +686,7 @@ int main(int argc, char *argv[])
 		return -1;
 
 	if (access(path,F_OK) != 0) {
-		int fd = open(path, O_RDWR | O_CREAT, 
+		int fd = open(path, O_RDWR | O_CREAT,
 			S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
 		free(path);

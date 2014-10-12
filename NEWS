@@ -5,7 +5,7 @@
      2014-10-12
         Added "delete all" option. Also fixed unnecessary errors when ~/.memo
         does not exist.
-        
+
         Applied patches from Jari Aalto. Includes code readability fixes as
         well as improves help.
 
