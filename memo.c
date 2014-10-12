@@ -1,6 +1,6 @@
 /* Memo is a Unix-style note taking software. 
  *
- * Copyright (c) 2014 Niko Rosvall <niko@newsworm.net>
+ * Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -621,29 +621,54 @@ int add_note(const char *content)
 
 void usage()
 {
-	printf("Memo Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>\n");
-	printf("Usage: memo [option]...\n\n");
-	printf("-a <content>\tadd a new note\n");
-	printf("-d <id>\t\tdelete note by id\n");
-	printf("-D\t\tdelete all notes\n");
-	printf("-e <path>\texport notes as html to a file\n");
-	printf("-f <search>\tfind note by search term\n");
-	printf("-h\t\tshow this help\n");
-	printf("-l <n>\t\tshow latest n notes\n");
-	printf("-s \t\tshow all notes\n");
-	printf("-v \t\tshow Memo version info\n\n");
-	printf("Examples:\n\n");
-	printf("Add a new note:\n");
-	printf("memo -a \"Remember to buy milk!\"\n\n");
-	printf("There was something to buy...Let's search:\n");
-	printf("memo -f buy\n");
-	printf("And the output would be:\n");
-	printf("4\t2014-10-10\tRemember to buy milk\n\n");
-	printf("It was cheese we needed, not milk. Let's do a replace:\n");
-	printf("memo -d 4 -a \"Remember to buy cheese\"\n");
-	printf("This would remove note with id 4 and add a new one.\n\n");
-	printf("Memo also supports adding a note from stdin. For example:\n");
-	printf("echo \"My new note\" | memo\n\n");
+#define HELP "\
+SYNOPSIS\n\
+\n\
+    memo [options]\n\
+\n\
+OPTIONS\n\
+\n\
+    -a <content>    Add a new note\n\
+    -d <id>         Delete note by id\n\
+    -D              Delete all notes\n\
+    -e <path>       Export notes as html to a file\n\
+    -f <search>     Find note by search term\n\
+    -l <n>          Show latest n notes\n\
+    -s              Show all notes\n\
+\n\
+    -h              Show short help and exit. This page\n\
+    -V              Show version number of program\n\
+\n\
+DESCRIPTION\n\
+\n\
+    Memo is a note taking software for POSIX compatible operating systems.\n\
+    The short notes are saved to user's home directory in ~/.memo file.\n\
+\n\
+EXAMPLES\n\
+\n\
+    Add a new note:\n\
+        memo -a \"Remember to buy milk!\"\n\
+\n\
+    Search memos by string:\n\
+        memo -f buy\n\
+\n\
+        Output:\n\
+        4\t2014-10-10\tRemember to buy milk\n\
+\n\
+    Replace record 4 with new text:\n\
+        memo -d 4 -a \"Remember to buy cheese\"\n\
+\n\
+    Add note from stdin:\n\
+        echo \"My new note\" | memo\n\
+\n\
+AUTHORS\n\
+    Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>\n\
+\n\
+    Released under license GPL-3+. For more information, see\n\
+    http://www.gnu.org/licenses\n\
+"
+
+	printf(HELP);
 }
 
 
@@ -689,7 +714,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:hl:sv")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:hl:sV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -717,7 +742,7 @@ int main(int argc, char *argv[])
 		case 's':
 			show_notes();
 			break;
-		case 'v':
+		case 'V':
 			printf("Memo version %.1f\n", VERSION);
 		case '?':
 			if (optopt == 'a')
