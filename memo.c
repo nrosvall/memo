@@ -1,6 +1,6 @@
 /* Memo is a Unix-style note taking software.
  *
- * Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>
+ * Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -662,7 +662,7 @@ EXAMPLES\n\
         echo \"My new note\" | memo\n\
 \n\
 AUTHORS\n\
-    Copyright (C) 2014 Niko Rosvall <niko@newsworm.net>\n\
+    Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>\n\
 \n\
     Released under license GPL-3+. For more information, see\n\
     http://www.gnu.org/licenses\n\
