@@ -43,7 +43,8 @@
 char *read_memo_line(FILE *fp);
 char *get_memo_file_path();
 char *get_temp_memo_path();
-int   add_note(const char *content);
+int   is_valid_date_format(const char *date);
+int   add_note(const char *content, const char *date);
 int   get_next_id();
 int   delete_note(int id);
 int   show_notes();
@@ -57,7 +58,49 @@ void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 int   delete_all();
 
-#define VERSION 0.6
+#define VERSION 0.7
+
+/* Check if given date is in valid date format.
+ * Memo assumes the date format to be yyyy-MM-dd.
+ *
+ * Functions returns 0 on success and -1 on failure.
+ */
+int is_valid_date_format(const char *date)
+{
+	int d;
+	int m;
+	int y;
+	int ret;
+
+	/* contains number of days in each month from jan to dec */
+	int day_count[12] = { 31, 28, 31, 30, 31, 30, 
+			      31, 31, 30, 31, 30, 31 };
+
+	ret = sscanf(date, "%04d-%02d-%02d", &y, &m, &d);
+
+	if (ret != 3) {
+		fail(stderr,"%s: invalid date format\n", __func__);
+		return -1;
+	}
+
+	/* Leap year check */
+	if (y % 400 == 0 || y % 100 != 0 || y % 4 == 0)
+		day_count[1] = 29;
+
+	if (m < 13 && m > 0) {
+		if (d <= day_count[m - 1])
+			return 0;
+		else
+			fail(stderr, "%s: invalid day\n", 
+				__func__);
+	} else {
+		fail(stderr, "%s: invalid month\n", __func__);
+	}
+
+	fail(stderr, "%s: parsing date failed\n", __func__);
+
+	return -1;
+}
 
 
 /* Count the lines of the file as a note is always one liner,
@@ -575,23 +618,26 @@ char *get_temp_memo_path()
 }
 
 
-/*
- * .memo file format is following:
+/* .memo file format is following:
  *
  * id     date           content
  * |      |              |
  * |- id  |- yyy-MM-dd   |- actual note
  *
  * sections are separated by a tab character
+ *
+ * Parameter date can be NULL. If date is given
+ * in valid format(yyyy-MM-dd) it will be used
+ * for creating the note. If date is NULL, current
+ * date will be used instead.
  */
-int add_note(const char *content)
+int add_note(const char *content, const char *date)
 {
 	FILE *fp = NULL;
 	time_t t;
 	struct tm *ti;
 	int id = -1;
-	char date[11];
-
+	char note_date[11];
 
 	fp = get_memo_file_ptr("a");
 
@@ -600,18 +646,26 @@ int add_note(const char *content)
 		return -1;
 	}
 
-	time(&t);
-	ti = localtime(&t);
-
 	id = get_next_id();
 
-	if (id == -1) {
+	if (id == -1)
 		id = 1;
+
+	if (date != NULL) {
+                /* Date is already validated, so just copy it
+		 * for later use.  
+		 */
+		strcpy(note_date, date);
+	} else {
+
+		time(&t);
+		ti = localtime(&t);
+
+		strftime(note_date, 11, "%Y-%m-%d", ti);
 	}
 
-	strftime(date, 80, "%Y-%m-%d", ti);
-	fprintf(fp, "%d\t%s\t%s\n", id, date, content);
-
+	fprintf(fp, "%d\t%s\t%s\n", id, note_date,
+		content);
 
 	fclose(fp);
 
@@ -628,16 +682,16 @@ SYNOPSIS\n\
 \n\
 OPTIONS\n\
 \n\
-    -a <content>    Add a new note\n\
-    -d <id>         Delete note by id\n\
-    -D              Delete all notes\n\
-    -e <path>       Export notes as html to a file\n\
-    -f <search>     Find note by search term\n\
-    -l <n>          Show latest n notes\n\
-    -s              Show all notes\n\
+    -a <content> [yyyy-MM-dd]    Add a new note with optional date\n\
+    -d <id>                      Delete note by id\n\
+    -D                           Delete all notes\n\
+    -e <path>                    Export notes as html to a file\n\
+    -f <search>                  Find note by search term\n\
+    -l <n>                       Show latest n notes\n\
+    -s                           Show all notes\n\
 \n\
-    -h              Show short help and exit. This page\n\
-    -V              Show version number of program\n\
+    -h                           Show short help and exit. This page\n\
+    -V                           Show version number of program\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -648,6 +702,9 @@ EXAMPLES\n\
 \n\
     Add a new note:\n\
         memo -a \"Remember to buy milk!\"\n\
+\n\
+    Add a new note with custom date:\n\
+        memo -a \"File taxes \" 2014-10-14\n\
 \n\
     Search memos by string:\n\
         memo -f buy\n\
@@ -709,7 +766,7 @@ int main(int argc, char *argv[])
 		stdinline = read_memo_line(stdin);
 
 		if (stdinline) {
-			add_note(stdinline);
+			add_note(stdinline, NULL);
 			free(stdinline);
 		}
 	}
@@ -719,7 +776,13 @@ int main(int argc, char *argv[])
 
 		switch(c){
 		case 'a':
-			add_note(optarg);
+			if (argv[optind]) {
+				if (is_valid_date_format(argv[optind]) == 0)
+					add_note(optarg, argv[optind]);
+			}
+			else {
+				add_note(optarg,NULL);
+			}
 			break;
 		case 'd':
 			delete_note(atoi(optarg));
