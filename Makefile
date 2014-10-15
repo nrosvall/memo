@@ -1,6 +1,5 @@
 CC=gcc
 CFLAGS=-Wall -Werror
-DESTDIR=
 PREFIX=/usr/local
 
 all: memo
@@ -16,7 +15,7 @@ clean:
 	rm *.o
 
 install:
-	cp memo $(DESTDIR)$(PREFIX)/bin/
+	cp memo $(PREFIX)/bin/
 
 uninstall:
-	rm $(DESTDIR)$(PREFIX)/bin/memo
+	rm $(PREFIX)/bin/memo
