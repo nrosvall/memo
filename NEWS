@@ -1,3 +1,7 @@
+0.7: 2014-10-15
+        It's now possible to add a note with custom date. For example
+	one could do memo -a "Text for the short note" 2014-24-12. If date
+	is omitted, current date will be used.
 0.6: 2014-10-11
 	Initial release. Memo was originally implemented in Java,
 	but that was an ugly hack. Version 0.6 is now rewritten in C99
