@@ -30,6 +30,12 @@
  * about Windows...uninstd.h is not natively available for it(?).
  */
 
+/* To enable _POSIX_C_SOURCE feature test macro */
+#define _XOPEN_SOURCE 600
+
+/* Make only POSIX.2 regexp functions available */
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +44,8 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <regex.h>
 
 /* Function declarations */
 char *read_memo_line(FILE *fp);
@@ -50,6 +58,7 @@ int   delete_note(int id);
 int   show_notes();
 int   count_notes(FILE *fp);
 int   search_notes(const char *search);
+int   search_regexp(const char *regexp);
 const char *export_html(const char *path);
 void  output_line(char *line);
 void  show_latest(int count);
@@ -58,7 +67,7 @@ void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 int   delete_all();
 
-#define VERSION 0.7
+#define VERSION 0.8
 
 /* Check if given date is in valid date format.
  * Memo assumes the date format to be yyyy-MM-dd.
@@ -351,6 +360,69 @@ int search_notes(const char *search)
 		lines--;
 	}
 
+	fclose(fp);
+
+	return count;
+}
+
+
+/* Search using regular expressions (POSIX Basic Regular Expression syntax)
+ * Returns the count of found notes or -1 if functions fails.
+ */
+int search_regexp(const char *regexp)
+{
+	int count = 0;
+	regex_t regex;
+	int ret;
+	char *line = NULL;
+	char lines = 0;
+	FILE *fp = NULL;
+	char buffer[100];
+
+	ret = regcomp(&regex, regexp, REG_ICASE);
+
+	if (ret != 0) {
+		fail(stderr, "%s: invalid regexp\n", __func__);
+		return -1;
+	}
+
+	fp = get_memo_file_ptr("r");
+	lines = count_notes(fp);
+
+	if (lines == -1) {
+		regfree(&regex);
+		fail(stderr,"%s: counting lines failed\n", __func__);
+		return -1;
+	}
+
+	while (lines >= 0) {
+		line = read_memo_line(fp);
+
+		if (line) {
+			ret = regexec(&regex, line, 0, NULL, 0);
+
+			if (ret == 0) {
+				output_line(line);
+				count++;
+			} else if (ret != 0 && ret != REG_NOMATCH) {
+				/* Something went wrong while executing
+				   regexp. Clean up and exit loop. */
+				regerror(ret, &regex, buffer, 
+					 sizeof(buffer));
+				fail(stderr, "%s: %s\n", __func__, 
+				     buffer);
+				free(line);
+
+				break;
+			}
+
+			free(line);
+		}
+
+		lines--;
+	}
+
+	regfree(&regex);
 	fclose(fp);
 
 	return count;
@@ -686,7 +758,8 @@ OPTIONS\n\
     -d <id>                      Delete note by id\n\
     -D                           Delete all notes\n\
     -e <path>                    Export notes as html to a file\n\
-    -f <search>                  Find note by search term\n\
+    -f <search>                  Find notes by search term\n\
+    -F <regex>                   Find notes by regular expression\n\
     -l <n>                       Show latest n notes\n\
     -s                           Show all notes\n\
 \n\
@@ -771,7 +844,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:hl:sV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:sV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -796,6 +869,9 @@ int main(int argc, char *argv[])
 		case 'f':
 			search_notes(optarg);
 			break;
+		case 'F':
+			search_regexp(optarg);
+			break;
 		case 'h':
 			usage();
 			break;
@@ -817,6 +893,8 @@ int main(int argc, char *argv[])
 				printf("-e missing an argument <path>\n");
 			else if (optopt == 'f')
 				printf("-f missing an argument <search>\n");
+			else if (optopt == 'F')
+				printf("-F missing an argument <regex>\n");
 			else if (optopt == 'l')
 				printf("-l missing an argument <id>\n");
 			else
