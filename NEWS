@@ -1,3 +1,10 @@
+0.8: 2014-10-19
+	Notes can be now searched with regular expressions. 
+        POSIX.2 basic regular expressions are supported. This was 
+        chosen to achieve compatibility with tools such as grep and sed.
+
+	Added manual page memo(1)
+
 0.7: 2014-10-15
         It's now possible to add a note with custom date. For example
 	one could do memo -a "Text for the short note" 2014-24-12. If date
