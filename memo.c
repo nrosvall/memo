@@ -48,15 +48,17 @@
 #include <regex.h>
 
 /* Function declarations */
-char *read_memo_line(FILE *fp);
+char *read_file_line(FILE *fp);
 char *get_memo_file_path();
+char *get_memo_conf_path();
 char *get_temp_memo_path();
+char *get_memo_conf_value(const char *prop);
 int   is_valid_date_format(const char *date);
 int   add_note(const char *content, const char *date);
 int   get_next_id();
 int   delete_note(int id);
 int   show_notes();
-int   count_notes(FILE *fp);
+int   count_file_lines(FILE *fp);
 int   search_notes(const char *search);
 int   search_regexp(const char *regexp);
 const char *export_html(const char *path);
@@ -67,7 +69,8 @@ void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 int   delete_all();
 
-#define VERSION 0.8
+#define VERSION 0.9
+
 
 /* Check if given date is in valid date format.
  * Memo assumes the date format to be yyyy-MM-dd.
@@ -82,7 +85,7 @@ int is_valid_date_format(const char *date)
 	int ret;
 
 	/* contains number of days in each month from jan to dec */
-	int day_count[12] = { 31, 28, 31, 30, 31, 30, 
+	int day_count[12] = { 31, 28, 31, 30, 31, 30,
 			      31, 31, 30, 31, 30, 31 };
 
 	ret = sscanf(date, "%04d-%02d-%02d", &y, &m, &d);
@@ -100,8 +103,7 @@ int is_valid_date_format(const char *date)
 		if (d <= day_count[m - 1])
 			return 0;
 		else
-			fail(stderr, "%s: invalid day\n", 
-				__func__);
+			fail(stderr, "%s: invalid day\n", __func__);
 	} else {
 		fail(stderr, "%s: invalid month\n", __func__);
 	}
@@ -112,7 +114,10 @@ int is_valid_date_format(const char *date)
 }
 
 
-/* Count the lines of the file as a note is always one liner,
+/* This function is used to count lines in .memo and ~/.memorc
+ * files.
+ * 
+ * Count the lines of the file as a note is always one liner,
  * lines == note count.
  *
  * File pointer is rewinded to the beginning of the file.
@@ -120,7 +125,7 @@ int is_valid_date_format(const char *date)
  * Returns the count or -1 if the file pointer is null.
  * Caller must close fp after calling the function successfully.
  */
-int count_notes(FILE *fp)
+int count_file_lines(FILE *fp)
 {
 	int count = 0;
 	int ch = 0;
@@ -161,7 +166,7 @@ void fail(FILE *out, const char *fmt, ...)
 }
 
 
-/* Get open FILE* for ~./memo file.
+/* Get open FILE* for .memo file.
  * Returns NULL of failure.
  * Caller must close the file pointer after calling the function
  * succesfully.
@@ -189,11 +194,15 @@ FILE *get_memo_file_ptr(char *mode)
 	return fp;
 }
 
-/* Reads a line from source pointed by FILE*.
+/* Reads a line from source pointed by FILE*. 
+ *
+ * This function is used to read .memo as well as ~/.memorc
+ * files line by line.
+ * 
  * Return NULL on failure.
  * Caller is responsible for freeing the return value
  */
-char *read_memo_line(FILE *fp)
+char *read_file_line(FILE *fp)
 {
 	if (!fp)
 		return NULL;
@@ -240,7 +249,7 @@ char *read_memo_line(FILE *fp)
 }
 
 
-/* Simply read all the lines from the ~/.memo file
+/* Simply read all the lines from the .memo file
  * and return the id of the last line plus one.
  * If the file is missing or is empty, return 0
  * On error, returns -1
@@ -255,7 +264,7 @@ int get_next_id()
 
 	fp = get_memo_file_ptr("r");
 
-	lines = count_notes(fp);
+	lines = count_file_lines(fp);
 
 	if (lines == -1) {
 		fail(stderr,"%s: counting lines failed\n", __func__);
@@ -263,7 +272,7 @@ int get_next_id()
 	}
 
 	while (1) {
-		line = read_memo_line(fp);
+		line = read_file_line(fp);
 
 		/* Check if we're at the last line */
 		if (line && current == lines) {
@@ -298,7 +307,7 @@ int show_notes()
 
 	fp = get_memo_file_ptr("r");
 
-	lines = count_notes(fp);
+	lines = count_file_lines(fp);
 	count = lines;
 
 	if (lines == -1) {
@@ -307,7 +316,7 @@ int show_notes()
 	}
 
 	while (lines >= 0) {
-		line = read_memo_line(fp);
+		line = read_file_line(fp);
 
 		if (line) {
 			output_line(line);
@@ -335,7 +344,7 @@ int search_notes(const char *search)
 
 	fp = get_memo_file_ptr("r");
 
-	lines = count_notes(fp);
+	lines = count_file_lines(fp);
 
 	if (lines == -1) {
 		fail(stderr,"%s: counting lines failed\n", __func__);
@@ -343,7 +352,7 @@ int search_notes(const char *search)
 	}
 
 	while (lines >= 0) {
-		line = read_memo_line(fp);
+		line = read_file_line(fp);
 
 		if (line){
 			/* Check if the search term matches */
@@ -387,7 +396,7 @@ int search_regexp(const char *regexp)
 	}
 
 	fp = get_memo_file_ptr("r");
-	lines = count_notes(fp);
+	lines = count_file_lines(fp);
 
 	if (lines == -1) {
 		regfree(&regex);
@@ -396,7 +405,7 @@ int search_regexp(const char *regexp)
 	}
 
 	while (lines >= 0) {
-		line = read_memo_line(fp);
+		line = read_file_line(fp);
 
 		if (line) {
 			ret = regexec(&regex, line, 0, NULL, 0);
@@ -407,9 +416,9 @@ int search_regexp(const char *regexp)
 			} else if (ret != 0 && ret != REG_NOMATCH) {
 				/* Something went wrong while executing
 				   regexp. Clean up and exit loop. */
-				regerror(ret, &regex, buffer, 
+				regerror(ret, &regex, buffer,
 					 sizeof(buffer));
-				fail(stderr, "%s: %s\n", __func__, 
+				fail(stderr, "%s: %s\n", __func__,
 				     buffer);
 				free(line);
 
@@ -439,7 +448,7 @@ void output_line(char *line)
 }
 
 
-/* Export current ~/.memo file to a html file
+/* Export current .memo file to a html file
  * Return the path of the html file, or NULL on failure.
  */
 const char *export_html(const char *path)
@@ -457,7 +466,7 @@ const char *export_html(const char *path)
 	}
 
 	fpm = get_memo_file_ptr("r");
-	lines = count_notes(fpm);
+	lines = count_file_lines(fpm);
 
 	if (lines == -1) {
 		fail(stderr, "%s: counting lines failed\n", __func__);
@@ -474,7 +483,7 @@ const char *export_html(const char *path)
 	fprintf(fp, "<table>\n");
 
 	while (lines >= 0) {
-		line = read_memo_line(fpm);
+		line = read_file_line(fpm);
 
 		if (line) {
 			fprintf(fp, "<tr><td><pre>%s</pre></td></tr>\n",
@@ -504,7 +513,7 @@ void show_latest(int n)
 
 	fp = get_memo_file_ptr("r");
 
-	lines = count_notes(fp);
+	lines = count_file_lines(fp);
 
 	if (lines != -1) {
 		/* If n is bigger than the count of lines or smaller
@@ -516,7 +525,7 @@ void show_latest(int n)
 			start = lines - n;
 
 		while (lines >= 0) {
-			line = read_memo_line(fp);
+			line = read_file_line(fp);
 
 			if (line) {
 				if (current > start)
@@ -535,7 +544,7 @@ void show_latest(int n)
 
 
 /* Deletes all notes. Function actually
- * simply removes ~/.memo file.
+ * simply removes .memo file.
  * Returns 0 on success, -1 on failure.
  */
 int delete_all()
@@ -593,7 +602,7 @@ int delete_note(int id)
 	}
 
 	fp = get_memo_file_ptr("r");
-	lines = count_notes(fp);
+	lines = count_file_lines(fp);
 
 	if (lines == -1) {
 		free(memofile);
@@ -603,7 +612,7 @@ int delete_note(int id)
 	}
 
 	while (lines >= 0) {
-		line = read_memo_line(fp);
+		line = read_file_line(fp);
 
 		if (line) {
 			char *endptr;
@@ -634,27 +643,186 @@ int delete_note(int id)
 }
 
 
-/*
- * Returns the path to $HOME/.memo file.
+/* Return the path to $HOME/.memorc.
+ * On failure NULL is returned.
  * Caller is responsible for freeing the return value.
  */
-char *get_memo_file_path()
+char *get_memo_conf_path()
 {
-	char *env = getenv("HOME");
-	char *path = (char*)malloc(1024 * sizeof(char));
+	char *env = NULL;
+	char *conf_path = NULL;
+	size_t len = 0;
 
-	if (path == NULL) {
-		fail(stderr,"%s: malloc failed\n", __func__);
-		return NULL;
-	}
+	env = getenv("HOME");
 
 	if (env == NULL){
 		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
 		return NULL;
 	}
 
-	strcpy(path, env);
-	strcat(path, "/.memo");
+	/* +1 for \0 byte */
+	len = strlen(env) + 1;
+
+	/* +8 to have space for \"/.memorc\" */
+	conf_path = (char*)malloc( (len + 8) * sizeof(char));
+
+	if (conf_path == NULL) {
+		fail(stderr, "%s: malloc failed\n", __func__);
+		return NULL;
+	}
+
+	strcpy(conf_path, env);
+	strcat(conf_path, "/.memorc");
+
+	return conf_path;
+}
+
+
+/* ~/.memorc file format is following:
+ * 
+ * PROPERTY=value
+ *
+ * e.g MEMO_PATH=/home/niko/.memo
+ *
+ * This function returns the value of the property.
+ * NULL is returned on failure. 
+ * On success, caller must free the return value.
+ */
+char *get_memo_conf_value(const char *prop)
+{
+	char *retval = NULL;
+	char *conf_path = NULL;
+	FILE *fp = NULL;
+	int prop_found = 0;
+
+	conf_path = get_memo_conf_path();
+
+	if (conf_path == NULL)
+		return NULL;
+
+	fp = fopen(conf_path, "r");
+
+	if (fp == NULL) {
+		fail(stderr, "%s: fopen %s failed \n", __func__, conf_path);
+		
+		free(conf_path);
+		return NULL;
+	}
+
+	int lines = count_file_lines(fp);
+
+	if (lines == -1) {
+		fail(stderr, "%s: counting lines failed\n", __func__);
+		fclose(fp);
+		free(conf_path);
+
+		return NULL;
+	}
+
+	while (lines >= 0) {
+
+		char *line = read_file_line(fp);
+
+		if (line) {
+			if (strncmp(line, prop, strlen(prop)) == 0) {
+
+				prop_found = 1;
+
+				/* Property found, get the value */
+				char *token = strtok(line, "=");
+				token = strtok(NULL, "=");
+				
+				if (token == NULL) {
+					/* property does not have
+					 * a value. fail.
+					 */
+					fail(stderr, "%s: no value\n", prop);
+					free(line);
+
+					break;
+				}
+
+			        size_t len = strlen(token) + 1;
+				retval = (char*)malloc(len * sizeof(char));
+
+				if (retval == NULL) {
+					fail(stderr,"%s malloc\n", __func__);
+					free(line);
+					
+					break;
+				}
+
+				strcpy(retval, token);
+				free(line);
+
+				break;
+				
+			}
+
+			free(line);
+		}
+
+		lines--;
+	}
+
+	if(!prop_found)
+		printf("%s not found in %s\n", prop, conf_path);
+
+	fclose(fp);
+	free(conf_path);
+
+	return retval;
+}
+
+
+/*
+ * Returns the path to .memo file or NULL on failure.
+ * Caller is responsible for freeing the return value.
+ */
+char *get_memo_file_path()
+{
+	char *env = getenv("HOME");
+	char *path = NULL;
+	size_t len = 0;
+	char *conf_path = NULL;
+
+	conf_path = get_memo_conf_path();
+
+	if (conf_path == NULL)
+		return NULL;
+
+	if (env == NULL){
+		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
+		return NULL;
+	}
+
+	/* +1 for \0 byte */
+	len = strlen(env) + 1;
+
+	if (access(conf_path,F_OK) != 0) {
+
+		/* Config file not found, so fallback to ~/.memo */
+
+		/* +6 to have space for \"/.memo\" */
+		path = (char*)malloc( (len + 6) * sizeof(char));
+
+		if (path == NULL) {
+			fail(stderr,"%s: malloc failed\n", __func__);
+			free(conf_path);
+			return NULL;
+		}
+
+		strcpy(path, env);
+		strcat(path, "/.memo");
+
+	} else {
+		/* Configuration file found, read .memo location
+		   from it */
+		path = get_memo_conf_value("MEMO_PATH");
+
+	}
+
+	free(conf_path);
 
 	return path;
 }
@@ -725,7 +893,7 @@ int add_note(const char *content, const char *date)
 
 	if (date != NULL) {
                 /* Date is already validated, so just copy it
-		 * for later use.  
+		 * for later use.
 		 */
 		strcpy(note_date, date);
 	} else {
@@ -769,7 +937,8 @@ OPTIONS\n\
 DESCRIPTION\n\
 \n\
     Memo is a note taking software for POSIX compatible operating systems.\n\
-    The short notes are saved to user's home directory in ~/.memo file.\n\
+    The short notes are saved to user's home directory in ~/.memo file\n\
+    by default.\n\
 \n\
 EXAMPLES\n\
 \n\
@@ -790,6 +959,10 @@ EXAMPLES\n\
 \n\
     Add note from stdin:\n\
         echo \"My new note\" | memo\n\
+\n\
+    It's possible to change the location (and name) of the .memo file. Create $HOME/.memorc with\n\
+    a line MEMO_PATH=/path/you/would/like , Memo will use that path instead of the\n\
+    default $HOME/.memo path.\n\
 \n\
 AUTHORS\n\
     Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>\n\
@@ -836,7 +1009,7 @@ int main(int argc, char *argv[])
 	       /* No options available, so get data from stdin.
 		* Assumes that the data is content for a new note.
 		*/
-		stdinline = read_memo_line(stdin);
+		stdinline = read_file_line(stdin);
 
 		if (stdinline) {
 			add_note(stdinline, NULL);

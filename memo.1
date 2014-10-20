@@ -1,14 +1,15 @@
 .\" Manpage for memo.
 .\" Any errors or typos, contact niko@ideabyte.net.
 
-.TH man 1 "18 Oct 2014" "1.0" "memo man page"
+.TH man 1 "20 Oct 2014" "1.0" "memo man page"
 .SH NAME
 memo \- unix-style note taking software
 .SH SYNOPSIS
 memo [OPTIONS]
 .SH DESCRIPTION
 Memo is a note taking software for POSIX compatible operating systems.
-The short notes are saved to user's home directory in ~/.memo file.
+The short notes are saved to user's home directory in ~/.memo file
+by default.
 .SH OPTIONS
 .IP "-a <content> [yyyy-MM-dd]"
 Add a new note
@@ -48,8 +49,13 @@ Replace record 4 with new text:
 .PP
 Add note from stdin:
        echo "My new note" | memo
+.PP
+It's possible to change the location (and name) of the .memo
+file. Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like
+, Memo will use that path instead of the default $HOME/.memo path.
 .SH FILES
 .I $HOME/.memo
+.I $HOME/.memorc
 .SH AUTHORS
 Written by Niko Rosvall, help written by Jari Aalto.
 .SH COPYRIGHT
