@@ -1,3 +1,11 @@
+0.9: 2014-10-20
+	It's now possible to change the path where Memo stores
+	notes. See manpage for more information.
+
+	Some refactoring of the codebase was also made. Couple
+	of minor bugfixes were made, Memo should be now even
+	more stable.	
+
 0.8: 2014-10-19
 	Notes can be now searched with regular expressions. 
         POSIX.2 basic regular expressions are supported. This was 
@@ -9,10 +17,12 @@
         It's now possible to add a note with custom date. For example
 	one could do memo -a "Text for the short note" 2014-24-12. If date
 	is omitted, current date will be used.
+
 0.6: 2014-10-11
 	Initial release. Memo was originally implemented in Java,
 	but that was an ugly hack. Version 0.6 is now rewritten in C99
 	and has proper support for reading from stdin among other things.
+
      2014-10-12
         Added "delete all" option. Also fixed unnecessary errors when ~/.memo
         does not exist.
