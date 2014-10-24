@@ -520,9 +520,9 @@ int mark_note_status(NoteStatus_t status, int id)
 		if (line) {
 			char *endptr;
 			int curr = strtol(line, &endptr, 10);
-			
+
 			switch(status) {
-				
+
 			case DONE:
 				if (curr == id) {
 					status_replace(line, "U", "D");
@@ -548,7 +548,7 @@ int mark_note_status(NoteStatus_t status, int id)
 					fprintf(tmpfp, "%s\n", line);
 				break;
 			}
-			
+
 			free(line);
 		}
 
@@ -567,7 +567,7 @@ int mark_note_status(NoteStatus_t status, int id)
 	free(memofile);
 	free(tmp);
 
-	return 0;	
+	return 0;
 }
 
 
@@ -925,8 +925,8 @@ char *get_temp_memo_path()
 
 /* .memo file format is following:
  *
- * id     status     date           content        
- * |      |          |              |             
+ * id     status     date           content
+ * |      |          |              |
  * |- id  |-U/D      |- yyy-MM-dd   |- actual note
  *
  * sections are separated by a tab character
