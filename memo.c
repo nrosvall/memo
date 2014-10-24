@@ -47,6 +47,13 @@
 #include <sys/types.h>
 #include <regex.h>
 
+typedef enum {
+	DONE = 1,
+	UNDONE = 2,
+	DELETE = 3
+} NoteStatus_t;
+
+
 /* Function declarations */
 char *read_file_line(FILE *fp);
 char *get_memo_file_path();
@@ -68,8 +75,11 @@ FILE *get_memo_file_ptr();
 void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 int   delete_all();
+void  show_current_memo_file_path();
+int   mark_note_status(NoteStatus_t status, int id);
+void  status_replace(char *line, char *new, char *old);
 
-#define VERSION 0.9
+#define VERSION 1.0
 
 
 /* Check if given date is in valid date format.
@@ -116,7 +126,7 @@ int is_valid_date_format(const char *date)
 
 /* This function is used to count lines in .memo and ~/.memorc
  * files.
- * 
+ *
  * Count the lines of the file as a note is always one liner,
  * lines == note count.
  *
@@ -194,11 +204,11 @@ FILE *get_memo_file_ptr(char *mode)
 	return fp;
 }
 
-/* Reads a line from source pointed by FILE*. 
+/* Reads a line from source pointed by FILE*.
  *
  * This function is used to read .memo as well as ~/.memorc
  * files line by line.
- * 
+ *
  * Return NULL on failure.
  * Caller is responsible for freeing the return value
  */
@@ -354,7 +364,7 @@ int search_notes(const char *search)
 	while (lines >= 0) {
 		line = read_file_line(fp);
 
-		if (line){
+		if (line) {
 			/* Check if the search term matches */
 			const char *tmp = line;
 
@@ -416,10 +426,8 @@ int search_regexp(const char *regexp)
 			} else if (ret != 0 && ret != REG_NOMATCH) {
 				/* Something went wrong while executing
 				   regexp. Clean up and exit loop. */
-				regerror(ret, &regex, buffer,
-					 sizeof(buffer));
-				fail(stderr, "%s: %s\n", __func__,
-				     buffer);
+				regerror(ret, &regex, buffer, sizeof(buffer));
+				fail(stderr, "%s: %s\n", __func__, buffer);
 				free(line);
 
 				break;
@@ -435,6 +443,131 @@ int search_regexp(const char *regexp)
 	fclose(fp);
 
 	return count;
+}
+
+
+/* Replace note status old with new status in line.*/
+void status_replace(char *line, char *old, char *new)
+{
+	char *ptr = NULL;
+
+	ptr = strstr(line, old);
+
+	if (ptr != NULL) {
+		int diff = strlen(line) - strlen(ptr);
+		/* Make sure we have the match of the status
+		 * string and not something in the content
+		 * of the note.
+		 */
+		if (diff == 2)
+			strncpy(ptr, new, 1);
+	}
+}
+
+
+/* Mark note by status U is undone, D is done.
+ * when status is DELETE, the note will be deleted.
+ *
+ * Function will create a temporary file to write
+ * the memo file with new changes. Then the original
+ * file is replaced with the temp file.
+ */
+int mark_note_status(NoteStatus_t status, int id)
+{
+	FILE *fp = NULL;
+	FILE *tmpfp = NULL;
+	char *line = NULL;
+	char *tmp;
+	int lines = 0;
+
+	tmp = get_temp_memo_path();
+
+	if (tmp == NULL) {
+		fail(stderr,"%s: error getting a temp file\n",
+			__func__);
+		return -1;
+	}
+
+	char *memofile = get_memo_file_path();
+
+	if (memofile == NULL) {
+		fail(stderr,"%s: failed to get ~/.memo file path\n",
+			__func__);
+		return -1;
+	}
+
+	tmpfp = fopen(tmp, "w");
+
+	if (tmpfp == NULL) {
+		fail(stderr,"%s: error opening %s\n", __func__, tmp);
+		free(memofile);
+		return -1;
+	}
+
+	fp = get_memo_file_ptr("r");
+	lines = count_file_lines(fp);
+
+	if (lines == -1) {
+		free(memofile);
+		fclose(tmpfp);
+		fail(stderr,"%s: counting lines failed\n", __func__);
+		return -1;
+	}
+
+	while (lines >= 0) {
+		line = read_file_line(fp);
+
+		if (line) {
+			char *endptr;
+			int curr = strtol(line, &endptr, 10);
+			
+			switch(status) {
+				
+			case DONE:
+				if (curr == id) {
+					status_replace(line, "U", "D");
+					fprintf(tmpfp, "%s\n", line);
+				} else {
+					fprintf(tmpfp, "%s\n", line);
+				}
+				break;
+			case UNDONE:
+				if (curr == id) {
+					status_replace(line, "D", "U");
+					fprintf(tmpfp, "%s\n", line);
+				} else {
+					fprintf(tmpfp, "%s\n", line);
+				}
+				break;
+			case DELETE:
+				/* Write all the other lines, except the one
+				 * with the matching id. This is a simple way
+				 * to delete the line from the file.
+				 */
+				if (curr != id)
+					fprintf(tmpfp, "%s\n", line);
+				break;
+			}
+			
+			free(line);
+		}
+
+		lines--;
+	}
+
+	fclose(fp);
+	fclose(tmpfp);
+
+	if (access(memofile, F_OK) == 0)
+		remove(memofile);
+
+	rename(tmp, memofile);
+	remove(tmp);
+
+	free(memofile);
+	free(tmp);
+
+	return 0;	
 }
 
 
@@ -571,75 +704,7 @@ int delete_all()
  */
 int delete_note(int id)
 {
-	FILE *fp = NULL;
-	FILE *tmpfp = NULL;
-	char *line = NULL;
-	char *tmp;
-	int lines = 0;
-
-	tmp = get_temp_memo_path();
-
-	if (tmp == NULL) {
-		fail(stderr,"%s: error getting a temp file\n",
-			__func__);
-		return -1;
-	}
-
-	char *memofile = get_memo_file_path();
-
-	if (memofile == NULL) {
-		fail(stderr,"%s: failed to get ~/.memo file path\n",
-			__func__);
-		return -1;
-	}
-
-	tmpfp = fopen(tmp, "w");
-
-	if (tmpfp == NULL) {
-		fail(stderr,"%s: error opening %s\n", __func__, tmp);
-		free(memofile);
-		return -1;
-	}
-
-	fp = get_memo_file_ptr("r");
-	lines = count_file_lines(fp);
-
-	if (lines == -1) {
-		free(memofile);
-		fclose(tmpfp);
-		fail(stderr,"%s: counting lines failed\n", __func__);
-		return -1;
-	}
-
-	while (lines >= 0) {
-		line = read_file_line(fp);
-
-		if (line) {
-			char *endptr;
-			int curr = strtol(line, &endptr, 10);
-
-			if (curr != id)
-				fprintf(tmpfp, "%s\n", line);
-
-			free(line);
-		}
-
-		lines--;
-	}
-
-	fclose(fp);
-	fclose(tmpfp);
-
-	if (access(memofile, F_OK) == 0)
-		remove(memofile);
-
-	rename(tmp, memofile);
-	remove(tmp);
-
-	free(memofile);
-	free(tmp);
-
-	return 0;
+	return mark_note_status(DELETE, id);
 }
 
 
@@ -679,13 +744,13 @@ char *get_memo_conf_path()
 
 
 /* ~/.memorc file format is following:
- * 
+ *
  * PROPERTY=value
  *
  * e.g MEMO_PATH=/home/niko/.memo
  *
  * This function returns the value of the property.
- * NULL is returned on failure. 
+ * NULL is returned on failure.
  * On success, caller must free the return value.
  */
 char *get_memo_conf_value(const char *prop)
@@ -704,7 +769,7 @@ char *get_memo_conf_value(const char *prop)
 
 	if (fp == NULL) {
 		fail(stderr, "%s: fopen %s failed \n", __func__, conf_path);
-		
+
 		free(conf_path);
 		return NULL;
 	}
@@ -731,7 +796,7 @@ char *get_memo_conf_value(const char *prop)
 				/* Property found, get the value */
 				char *token = strtok(line, "=");
 				token = strtok(NULL, "=");
-				
+
 				if (token == NULL) {
 					/* property does not have
 					 * a value. fail.
@@ -748,7 +813,7 @@ char *get_memo_conf_value(const char *prop)
 				if (retval == NULL) {
 					fail(stderr,"%s malloc\n", __func__);
 					free(line);
-					
+
 					break;
 				}
 
@@ -756,7 +821,7 @@ char *get_memo_conf_value(const char *prop)
 				free(line);
 
 				break;
-				
+
 			}
 
 			free(line);
@@ -860,9 +925,9 @@ char *get_temp_memo_path()
 
 /* .memo file format is following:
  *
- * id     date           content
- * |      |              |
- * |- id  |- yyy-MM-dd   |- actual note
+ * id     status     date           content        
+ * |      |          |              |             
+ * |- id  |-U/D      |- yyy-MM-dd   |- actual note
  *
  * sections are separated by a tab character
  *
@@ -870,6 +935,9 @@ char *get_temp_memo_path()
  * in valid format(yyyy-MM-dd) it will be used
  * for creating the note. If date is NULL, current
  * date will be used instead.
+ *
+ * Note will be marked with status "U" which means it's "undone".
+ * "D" means "done".
  */
 int add_note(const char *content, const char *date)
 {
@@ -904,7 +972,8 @@ int add_note(const char *content, const char *date)
 		strftime(note_date, 11, "%Y-%m-%d", ti);
 	}
 
-	fprintf(fp, "%d\t%s\t%s\n", id, note_date,
+
+	fprintf(fp, "%d\t%s\t%s\t%s\n", id, "U", note_date,
 		content);
 
 	fclose(fp);
@@ -929,6 +998,9 @@ OPTIONS\n\
     -f <search>                  Find notes by search term\n\
     -F <regex>                   Find notes by regular expression\n\
     -l <n>                       Show latest n notes\n\
+    -m <id>                      Mark note status as done\n\
+    -M <id>                      Mark note status as undone\n\
+    -p                           Show current memo file path\n\
     -s                           Show all notes\n\
 \n\
     -h                           Show short help and exit. This page\n\
@@ -960,9 +1032,9 @@ EXAMPLES\n\
     Add note from stdin:\n\
         echo \"My new note\" | memo\n\
 \n\
-    It's possible to change the location (and name) of the .memo file. Create $HOME/.memorc with\n\
-    a line MEMO_PATH=/path/you/would/like , Memo will use that path instead of the\n\
-    default $HOME/.memo path.\n\
+    It's possible to change the location (and name) of the .memo file.\n\
+    Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like,\n\
+    Memo will use that path instead of the default $HOME/.memo path.\n\
 \n\
 AUTHORS\n\
     Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>\n\
@@ -972,6 +1044,22 @@ AUTHORS\n\
 "
 
 	printf(HELP);
+}
+
+
+void show_current_memo_file_path()
+{
+	char *path = NULL;
+
+	path = get_memo_file_path();
+
+	if (path == NULL) {
+		fail(stderr,"%s: can't retrieve path\n", __func__);
+	}
+	else {
+		printf("%s\n", path);
+		free(path);
+	}
 }
 
 
@@ -1017,7 +1105,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:sV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:psV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -1051,6 +1139,15 @@ int main(int argc, char *argv[])
 		case 'l':
 			show_latest(atoi(optarg));
 			break;
+		case 'm':
+			mark_note_status(DONE, atoi(optarg));
+			break;
+                case 'M':
+	                mark_note_status(UNDONE, atoi(optarg));
+	                break;
+		case 'p':
+			show_current_memo_file_path();
+			break;
 		case 's':
 			show_notes();
 			break;
@@ -1070,6 +1167,10 @@ int main(int argc, char *argv[])
 				printf("-F missing an argument <regex>\n");
 			else if (optopt == 'l')
 				printf("-l missing an argument <id>\n");
+			else if (optopt == 'm')
+				printf("-m missing an argument <id>\n");
+			else if(optopt == 'M')
+				printf("-M missing an argument <id>\n");
 			else
 				printf("invalid option, see memo -h for help\n");
 			break;
