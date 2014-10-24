@@ -1,3 +1,12 @@
+1.0: 2014-10-24
+	First official release of Memo. File format is now
+	stable and documented.
+
+	Different note statuses are now supported. Notes can
+	be "undone" or "done". 
+
+	BUGFIX: Fixed a minor memory leak in main().
+
 0.9: 2014-10-20
 	It's now possible to change the path where Memo stores
 	notes. See manpage for more information.
