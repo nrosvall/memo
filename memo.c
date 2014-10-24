@@ -1080,8 +1080,6 @@ int main(int argc, char *argv[])
 		int fd = open(path, O_RDWR | O_CREAT,
 			S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
-		free(path);
-
 		if (fd == -1) {
 			fail(stderr,"%s: failed to create empty memo\n",
 				__func__);
@@ -1179,6 +1177,8 @@ int main(int argc, char *argv[])
 
 	if (argc > 1 && !has_valid_options)
 		printf("invalid input, see memo -h for help\n");
+
+	free(path);
 
 	return 0;
 }
