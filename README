@@ -1,7 +1,7 @@
 Memo is a Unix-style note taking software for POSIX compatible systems.
-At the moment it's tested only on GNU/Linux, but it should be very portable
-for other platforms. Windows is not supported, but feel free to port Memo
-for it.
+At the moment it's tested only on GNU/Linux, but it should be very
+portable for other platforms. Memo also works under Cygwin, but it's not
+actively tested under it.
 
 Memo is licenced under the GPL.
 
