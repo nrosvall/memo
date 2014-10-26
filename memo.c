@@ -50,7 +50,9 @@
 typedef enum {
 	DONE = 1,
 	UNDONE = 2,
-	DELETE = 3
+	DELETE = 3,
+	DELETE_DONE = 4,
+	STATUS_ERROR = 5
 } NoteStatus_t;
 
 
@@ -76,8 +78,9 @@ void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 int   delete_all();
 void  show_current_memo_file_path();
+NoteStatus_t get_note_status_from_line(const char *line);
 int   mark_note_status(NoteStatus_t status, int id);
-void  status_replace(char *line, char *new, char *old);
+void  note_status_replace(char *line, char *new, char *old);
 
 #define VERSION 1.0
 
@@ -447,7 +450,7 @@ int search_regexp(const char *regexp)
 
 
 /* Replace note status old with new status in line.*/
-void status_replace(char *line, char *old, char *new)
+void note_status_replace(char *line, char *old, char *new)
 {
 	char *ptr = NULL;
 
@@ -465,12 +468,55 @@ void status_replace(char *line, char *old, char *new)
 }
 
 
+/* Get the note status from the note line.
+ * Returns STATUS_ERROR on failure.
+ */
+NoteStatus_t get_note_status_from_line(const char *line)
+{
+	char *token = NULL;
+	char *buffer = NULL;
+	NoteStatus_t status;
+
+	status = STATUS_ERROR;
+
+	buffer = (char*)malloc((strlen(line) + 1) * sizeof(char));
+
+	if (buffer == NULL) {
+		fail(stderr, "%s malloc failed\n", __func__);
+		return status;
+	}
+
+	strcpy(buffer, line);
+
+	token = strtok(buffer, "\t");
+	token = strtok(NULL, "\t");
+
+	if (token == NULL) {
+		fail(stderr, "%s: parsing line failed\n", __func__);
+		free(buffer);
+		return status;
+	}
+
+	if (strcmp(token, "U") == 0)
+		status = UNDONE;
+	else if (strcmp(token, "D") == 0)
+		status = DONE;
+
+	free(buffer);
+
+	return status;
+}
+
+
 /* Mark note by status U is undone, D is done.
- * when status is DELETE, the note will be deleted.
+ * when status is DELETE, the note with a matching
+ * id will be deleted.
  *
  * Function will create a temporary file to write
  * the memo file with new changes. Then the original
  * file is replaced with the temp file.
+
+ * id is ignored when status DELETE_ALL is used.
  */
 int mark_note_status(NoteStatus_t status, int id)
 {
@@ -525,7 +571,7 @@ int mark_note_status(NoteStatus_t status, int id)
 
 			case DONE:
 				if (curr == id) {
-					status_replace(line, "U", "D");
+					note_status_replace(line, "U", "D");
 					fprintf(tmpfp, "%s\n", line);
 				} else {
 					fprintf(tmpfp, "%s\n", line);
@@ -533,7 +579,7 @@ int mark_note_status(NoteStatus_t status, int id)
 				break;
 			case UNDONE:
 				if (curr == id) {
-					status_replace(line, "D", "U");
+					note_status_replace(line, "D", "U");
 					fprintf(tmpfp, "%s\n", line);
 				} else {
 					fprintf(tmpfp, "%s\n", line);
@@ -546,6 +592,13 @@ int mark_note_status(NoteStatus_t status, int id)
 				 */
 				if (curr != id)
 					fprintf(tmpfp, "%s\n", line);
+				break;
+			case DELETE_DONE:
+				if (get_note_status_from_line(line) != DONE)
+					fprintf(tmpfp, "%s\n", line);
+				break;
+			case STATUS_ERROR:
+				fail(stderr,"STATUS_ERROR, this shouldn't happen\n");
 				break;
 			}
 
@@ -1001,6 +1054,7 @@ OPTIONS\n\
     -m <id>                      Mark note status as done\n\
     -M <id>                      Mark note status as undone\n\
     -p                           Show current memo file path\n\
+    -R                           Delete all notes marked as done\n\
     -s                           Show all notes\n\
 \n\
     -h                           Show short help and exit. This page\n\
@@ -1103,7 +1157,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:psV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:pRsV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -1145,6 +1199,9 @@ int main(int argc, char *argv[])
 	                break;
 		case 'p':
 			show_current_memo_file_path();
+			break;
+		case 'R':
+			mark_note_status(DELETE_DONE, -1);
 			break;
 		case 's':
 			show_notes();
