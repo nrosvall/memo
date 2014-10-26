@@ -1137,6 +1137,7 @@ int main(int argc, char *argv[])
 		if (fd == -1) {
 			fail(stderr,"%s: failed to create empty memo\n",
 				__func__);
+			free(path);
 			return -1;
 		}
 
