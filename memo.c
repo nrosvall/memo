@@ -516,7 +516,7 @@ NoteStatus_t get_note_status_from_line(const char *line)
  * the memo file with new changes. Then the original
  * file is replaced with the temp file.
 
- * id is ignored when status DELETE_ALL is used.
+ * id is ignored when status DELETE_DONE is used.
  */
 int mark_note_status(NoteStatus_t status, int id)
 {
