@@ -1,4 +1,4 @@
-/* Memo is a Unix-style note taking software.
+/* Memo is a Unix-style note-taking software.
  *
  * Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>
  *
@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
- * memo.c implements a flexible, Unix-style note taking software.
+ * memo.c implements a flexible, Unix-style note-taking software.
  *
  * If you're interested hacking Memo, please remember:
  * coding style is pretty much the same as for Linux kernel.
@@ -1068,7 +1068,7 @@ OPTIONS\n\
 \n\
 DESCRIPTION\n\
 \n\
-    Memo is a note taking software for POSIX compatible operating systems.\n\
+    Memo is a note-taking software for POSIX compatible operating systems.\n\
     The short notes are saved to user's home directory in ~/.memo file\n\
     by default.\n\
 \n\
