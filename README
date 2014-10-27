@@ -1,4 +1,4 @@
-Memo is a Unix-style note taking software for POSIX compatible systems.
+Memo is a Unix-style note-taking software for POSIX compatible systems.
 At the moment it's tested only on GNU/Linux, but it should be very
 portable for other platforms. Memo also works under Cygwin, but it's not
 actively tested under it.
