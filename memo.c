@@ -52,7 +52,8 @@ typedef enum {
 	UNDONE = 2,
 	DELETE = 3,
 	DELETE_DONE = 4,
-	STATUS_ERROR = 5
+	STATUS_ERROR = 5,
+	ALL_DONE = 6
 } NoteStatus_t;
 
 
@@ -516,7 +517,7 @@ NoteStatus_t get_note_status_from_line(const char *line)
  * the memo file with new changes. Then the original
  * file is replaced with the temp file.
 
- * id is ignored when status DELETE_DONE is used.
+ * id is ignored when status is DELETE_DONE or ALL_DONE.
  */
 int mark_note_status(NoteStatus_t status, int id)
 {
@@ -599,6 +600,10 @@ int mark_note_status(NoteStatus_t status, int id)
 				break;
 			case STATUS_ERROR:
 				fail(stderr,"STATUS_ERROR, this shouldn't happen\n");
+				break;
+			case ALL_DONE:
+				note_status_replace(line, "U", "D");
+				fprintf(tmpfp, "%s\n", line);
 				break;
 			}
 
@@ -1056,6 +1061,7 @@ OPTIONS\n\
     -p                           Show current memo file path\n\
     -R                           Delete all notes marked as done\n\
     -s                           Show all notes\n\
+    -T                           Mark all notes as done\n\
 \n\
     -h                           Show short help and exit. This page\n\
     -V                           Show version number of program\n\
@@ -1158,7 +1164,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:pRsV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:pRsTV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -1206,6 +1212,9 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 			show_notes();
+			break;
+		case 'T':
+			mark_note_status(ALL_DONE, -1);
 			break;
 		case 'V':
 			printf("Memo version %.1f\n", VERSION);
