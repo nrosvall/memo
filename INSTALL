@@ -1,0 +1,29 @@
+How to install Memo from source code
+
+    To compile and install Memo, you will need fairly modern
+    C compiler which supports C99 standard. You will also
+    need GNU Make program. Make is not mandatory, but makes
+    compiling and installing Memo easier.
+
+    1) Extract the source code archive e.g memo-1.0.tar.gz 
+    2) Move to the Memo source code directory 
+    3) Type make. This will compile Memo.
+    4) Type make install as root. This will install Memo to
+    /usr/local/bin and memo.1 manpage to /usr/local/share/man/man1/memo.1.gz
+    5) Run Memo. For example: memo -a "My first note"
+
+    Compile Memo without GNU Make.
+    
+	While it's possible to compile Memo without GNU Make program,
+	you will have to manually install the memo binary and the
+	manpage.
+
+	Compile command (assuming GCC is the C compiler in use): 
+	gcc -o memo memo.c
+
+	To install memo binary: cp memo /usr/local/bin/
+	To install memo.1 manpage: 
+	   cp memo.1 /usr/local/share/man/man1/
+	   gzip /usr/local/share/man/man1/memo.1
+
+Any errors or improvements, please contact niko@ideabyte.net.
