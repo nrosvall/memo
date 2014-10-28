@@ -53,7 +53,8 @@ typedef enum {
 	DELETE = 3,
 	DELETE_DONE = 4,
 	STATUS_ERROR = 5,
-	ALL_DONE = 6
+	ALL_DONE = 6,
+	POSTPONED = 7
 } NoteStatus_t;
 
 
@@ -67,19 +68,20 @@ int   is_valid_date_format(const char *date);
 int   add_note(const char *content, const char *date);
 int   get_next_id();
 int   delete_note(int id);
-int   show_notes();
+int   show_notes(NoteStatus_t status);
 int   count_file_lines(FILE *fp);
 int   search_notes(const char *search);
 int   search_regexp(const char *regexp);
 const char *export_html(const char *path);
-void  output_line(char *line);
+void  output_default(char *line);
+void  output_postponed(char *line);
 void  show_latest(int count);
 FILE *get_memo_file_ptr();
 void  usage();
 void  fail(FILE *out, const char *fmt, ...);
 int   delete_all();
 void  show_current_memo_file_path();
-NoteStatus_t get_note_status_from_line(const char *line);
+NoteStatus_t get_note_status(const char *line);
 int   mark_note_status(NoteStatus_t status, int id);
 void  note_status_replace(char *line, char *new, char *old);
 
@@ -308,11 +310,13 @@ int get_next_id()
 }
 
 
-/* Show all notes.
- * Returns the number of notes;
- * Returns -1 on failure
+/* Show all notes. with status POSTPONED, postponed
+ * notes are shown. Otherwise status is ignored and
+ * all notes are displayed.
+ *
+ * Returns the number of notes. Returns -1 on failure
  */
-int show_notes()
+int show_notes(NoteStatus_t status)
 {
 	FILE *fp = NULL;
 	char *line;
@@ -333,7 +337,10 @@ int show_notes()
 		line = read_file_line(fp);
 
 		if (line) {
-			output_line(line);
+			if (status == POSTPONED)
+				output_postponed(line);
+			else
+				output_default(line);
 			free(line);
 		}
 
@@ -373,7 +380,7 @@ int search_notes(const char *search)
 			const char *tmp = line;
 
 			if ((strstr(tmp, search)) != NULL){
-				output_line(line);
+				output_default(line);
 				count++;
 			}
 
@@ -425,7 +432,7 @@ int search_regexp(const char *regexp)
 			ret = regexec(&regex, line, 0, NULL, 0);
 
 			if (ret == 0) {
-				output_line(line);
+				output_default(line);
 				count++;
 			} else if (ret != 0 && ret != REG_NOMATCH) {
 				/* Something went wrong while executing
@@ -472,7 +479,7 @@ void note_status_replace(char *line, char *old, char *new)
 /* Get the note status from the note line.
  * Returns STATUS_ERROR on failure.
  */
-NoteStatus_t get_note_status_from_line(const char *line)
+NoteStatus_t get_note_status(const char *line)
 {
 	char *token = NULL;
 	char *buffer = NULL;
@@ -502,6 +509,8 @@ NoteStatus_t get_note_status_from_line(const char *line)
 		status = UNDONE;
 	else if (strcmp(token, "D") == 0)
 		status = DONE;
+	else if (strcmp(token, "P") == 0)
+		status = POSTPONED;
 
 	free(buffer);
 
@@ -572,7 +581,12 @@ int mark_note_status(NoteStatus_t status, int id)
 
 			case DONE:
 				if (curr == id) {
-					note_status_replace(line, "U", "D");
+
+					if (get_note_status(line) == POSTPONED)
+						note_status_replace(line, "P", "D");
+					else
+						note_status_replace(line, "U", "D");
+
 					fprintf(tmpfp, "%s\n", line);
 				} else {
 					fprintf(tmpfp, "%s\n", line);
@@ -580,7 +594,12 @@ int mark_note_status(NoteStatus_t status, int id)
 				break;
 			case UNDONE:
 				if (curr == id) {
-					note_status_replace(line, "D", "U");
+					if (get_note_status(line) == POSTPONED)
+						note_status_replace(line, 
+								"P", "U");
+					else
+						note_status_replace(line, 
+								"D", "U");
 					fprintf(tmpfp, "%s\n", line);
 				} else {
 					fprintf(tmpfp, "%s\n", line);
@@ -595,7 +614,7 @@ int mark_note_status(NoteStatus_t status, int id)
 					fprintf(tmpfp, "%s\n", line);
 				break;
 			case DELETE_DONE:
-				if (get_note_status_from_line(line) != DONE)
+				if (get_note_status(line) != DONE)
 					fprintf(tmpfp, "%s\n", line);
 				break;
 			case STATUS_ERROR:
@@ -605,6 +624,19 @@ int mark_note_status(NoteStatus_t status, int id)
 				note_status_replace(line, "U", "D");
 				fprintf(tmpfp, "%s\n", line);
 				break;
+			case POSTPONED:
+				if (curr == id) {
+					/* Only UNDONE notes can be postponed */
+					if (get_note_status(line) == UNDONE) {
+						note_status_replace(line, "U", "P");
+						fprintf(tmpfp, "%s\n", line);
+					} else {
+						fprintf(tmpfp, "%s\n", line);
+					}
+				} else {
+					fprintf(tmpfp, "%s\n", line);
+				}
+				break;		
 			}
 
 			free(line);
@@ -630,12 +662,23 @@ int mark_note_status(NoteStatus_t status, int id)
 
 
 /* This functions handles the output of one line.
- * Just a simple wrapper for printf for now.
- * Preserved for the future use.
+ * Postponed notes are ignored.
  */
-void output_line(char *line)
+void output_default(char *line)
 {
-	printf("%s\n", line);
+	if (get_note_status(line) != POSTPONED)
+		printf("%s\n", line);
+}
+
+
+/* Output notes which are postponed.
+ * Called from show_notes when command line option -P
+ * is used.
+ */
+void output_postponed(char *line)
+{
+	if (get_note_status(line) == POSTPONED)
+		printf("%s\n", line);
 }
 
 
@@ -720,7 +763,7 @@ void show_latest(int n)
 
 			if (line) {
 				if (current > start)
-					output_line(line);
+					output_default(line);
 				free(line);
 			}
 
@@ -1059,6 +1102,7 @@ OPTIONS\n\
     -m <id>                      Mark note status as done\n\
     -M <id>                      Mark note status as undone\n\
     -p                           Show current memo file path\n\
+    -P [id]                      Show postponed or mark note as postponed\n\
     -R                           Delete all notes marked as done\n\
     -s                           Show all notes\n\
     -T                           Mark all notes as done\n\
@@ -1091,6 +1135,12 @@ EXAMPLES\n\
 \n\
     Add note from stdin:\n\
         echo \"My new note\" | memo\n\
+\n\
+    Mark note as postponed:\n\
+       memo -P 4\n\
+\n\
+    Show postponed notes:\n\
+      memo -P\n\
 \n\
     It's possible to change the location (and name) of the .memo file.\n\
     Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like,\n\
@@ -1164,7 +1214,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:pRsTV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:pPRsTV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -1207,11 +1257,17 @@ int main(int argc, char *argv[])
 		case 'p':
 			show_current_memo_file_path();
 			break;
+		case 'P':
+			if (argv[optind])
+				mark_note_status(POSTPONED, atoi(argv[optind]));
+			else
+				show_notes(POSTPONED);
+			break;
 		case 'R':
 			mark_note_status(DELETE_DONE, -1);
 			break;
 		case 's':
-			show_notes();
+			show_notes(-1);
 			break;
 		case 'T':
 			mark_note_status(ALL_DONE, -1);
