@@ -84,6 +84,9 @@ void  show_current_memo_file_path();
 NoteStatus_t get_note_status(const char *line);
 int   mark_note_status(NoteStatus_t status, int id);
 void  note_status_replace(char *line, char *new, char *old);
+void  mark_as_done(FILE *fp, char *line);
+void  mark_as_undone(FILE *fp, char *line);
+void  mark_as_postponed(FILE *fp, char *line);
 
 #define VERSION 1.0
 
@@ -518,6 +521,43 @@ NoteStatus_t get_note_status(const char *line)
 }
 
 
+/* Simple helper function to mark note as done */
+void mark_as_done(FILE *fp, char *line)
+{
+	if (get_note_status(line) == POSTPONED)
+		note_status_replace(line, "P", "D");
+	else
+		note_status_replace(line, "U", "D");
+
+	fprintf(fp, "%s\n", line);
+}
+
+
+/* Simple helper function to mark note as undone */
+void mark_as_undone(FILE *fp, char *line)
+{
+	if (get_note_status(line) == POSTPONED)
+		note_status_replace(line, "P", "U");
+	else
+		note_status_replace(line, "D", "U");
+
+	fprintf(fp, "%s\n", line);
+}
+
+
+/* Simple helper function to mark note as postponed */
+void mark_as_postponed(FILE *fp, char *line)
+{
+	/* Only UNDONE notes can be postponed */
+	if (get_note_status(line) == UNDONE) {
+		note_status_replace(line, "U", "P");
+		fprintf(fp, "%s\n", line);
+	} else {
+		fprintf(fp, "%s\n", line);
+	}
+}
+
+
 /* Mark note by status U is undone, D is done.
  * when status is DELETE, the note with a matching
  * id will be deleted.
@@ -580,30 +620,16 @@ int mark_note_status(NoteStatus_t status, int id)
 			switch(status) {
 
 			case DONE:
-				if (curr == id) {
-
-					if (get_note_status(line) == POSTPONED)
-						note_status_replace(line, "P", "D");
-					else
-						note_status_replace(line, "U", "D");
-
+				if (curr == id) 
+					mark_as_done(tmpfp, line);
+				else
 					fprintf(tmpfp, "%s\n", line);
-				} else {
-					fprintf(tmpfp, "%s\n", line);
-				}
 				break;
 			case UNDONE:
-				if (curr == id) {
-
-					if (get_note_status(line) == POSTPONED)
-						note_status_replace(line, "P", "U");
-					else
-						note_status_replace(line, "D", "U");
-
+				if (curr == id)
+					mark_as_undone(tmpfp, line);
+				else
 					fprintf(tmpfp, "%s\n", line);
-				} else {
-					fprintf(tmpfp, "%s\n", line);
-				}
 				break;
 			case DELETE:
 				/* Write all the other lines, except the one
@@ -625,17 +651,10 @@ int mark_note_status(NoteStatus_t status, int id)
 				fprintf(tmpfp, "%s\n", line);
 				break;
 			case POSTPONED:
-				if (curr == id) {
-					/* Only UNDONE notes can be postponed */
-					if (get_note_status(line) == UNDONE) {
-						note_status_replace(line, "U", "P");
-						fprintf(tmpfp, "%s\n", line);
-					} else {
-						fprintf(tmpfp, "%s\n", line);
-					}
-				} else {
+				if (curr == id)
+					mark_as_postponed(tmpfp, line);
+				else
 					fprintf(tmpfp, "%s\n", line);
-				}
 				break;		
 			}
 
