@@ -594,12 +594,12 @@ int mark_note_status(NoteStatus_t status, int id)
 				break;
 			case UNDONE:
 				if (curr == id) {
+
 					if (get_note_status(line) == POSTPONED)
-						note_status_replace(line, 
-								"P", "U");
+						note_status_replace(line, "P", "U");
 					else
-						note_status_replace(line, 
-								"D", "U");
+						note_status_replace(line, "D", "U");
+
 					fprintf(tmpfp, "%s\n", line);
 				} else {
 					fprintf(tmpfp, "%s\n", line);
@@ -1104,7 +1104,7 @@ OPTIONS\n\
     -p                           Show current memo file path\n\
     -P [id]                      Show postponed or mark note as postponed\n\
     -R                           Delete all notes marked as done\n\
-    -s                           Show all notes\n\
+    -s                           Show all notes except postponed\n\
     -T                           Mark all notes as done\n\
 \n\
     -h                           Show short help and exit. This page\n\

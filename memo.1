@@ -31,10 +31,12 @@ Mark note status as done
 Mark note status as undone
 .IP -p
 Show current memo file path
+.IP "-P [id]"
+Show postponed or mark note as postponed
 .IP -R
 Delete all notes marked as done
 .IP -s
-Show all notes
+Show all notes except postponed
 .IP -T
 Mark all notes as done
 .IP -h
@@ -59,6 +61,12 @@ Replace record 4 with new text:
 .PP
 Add note from stdin:
        echo "My new note" | memo
+.PP
+Mark note as postponed:
+       memo -P 4
+.PP
+Show postponed notes:
+       memo -P
 .PP
 It's possible to change the location (and name) of the .memo
 file. Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like
