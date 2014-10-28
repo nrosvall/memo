@@ -46,6 +46,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <regex.h>
+#include <sys/stat.h>
+
 
 typedef enum {
 	DONE = 1,
