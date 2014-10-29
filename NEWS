@@ -1,3 +1,14 @@
+1.1: 2014-10-29
+        Stable version 1.1 released.
+
+	Notes can be now marked as postponed. See man page
+        for more information.
+
+        Memo path can be now set using MEMO_PATH environment
+        variable. See man page for more information.
+
+        BUGFIX: Prevent Memo from adding empty notes.
+
 1.0: 2014-10-24
 	First official release of Memo. File format is now
 	stable and documented.
