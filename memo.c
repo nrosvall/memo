@@ -560,9 +560,9 @@ void mark_as_postponed(FILE *fp, char *line)
 }
 
 
-/* Mark note by status U is undone, D is done.
- * when status is DELETE, the note with a matching
- * id will be deleted.
+/* Mark note by status U is undone, D is done or P
+ * postponed. When status is DELETE, the note with 
+ * a matching id will be deleted.
  *
  * Function will create a temporary file to write
  * the memo file with new changes. Then the original
@@ -1049,7 +1049,7 @@ char *get_temp_memo_path()
  *
  * id     status     date           content
  * |      |          |              |
- * |- id  |-U/D      |- yyy-MM-dd   |- actual note
+ * |- id  |-U/D/P    |- yyy-MM-dd   |- actual note
  *
  * sections are separated by a tab character
  *
@@ -1059,7 +1059,7 @@ char *get_temp_memo_path()
  * date will be used instead.
  *
  * Note will be marked with status "U" which means it's "undone".
- * "D" means "done".
+ * "D" means "done". With status P, note is marked as postponed.
  */
 int add_note(const char *content, const char *date)
 {
@@ -1165,6 +1165,10 @@ EXAMPLES\n\
 \n\
     Show postponed notes:\n\
       memo -P\n\
+\n\
+    Postponed notes are not shown with -s. Postponed note\n\
+    can be marked as undone or done normally using -m or -M flag.\n\
+    Only undone notes can be postponed.\n\
 \n\
     It's possible to change the location (and name) of the .memo file.\n\
     Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like,\n\
