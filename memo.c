@@ -1202,6 +1202,8 @@ EXAMPLES\n\
     It's possible to change the location (and name) of the .memo file.\n\
     Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like,\n\
     Memo will use that path instead of the default $HOME/.memo path.\n\
+    Memo path can be also set using an environment variable MEMO_PATH.\n\
+    For example: export MEMO_PATH=/path/to/some/file\n\
 \n\
 AUTHORS\n\
     Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>\n\
