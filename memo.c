@@ -61,34 +61,34 @@ typedef enum {
 
 
 /* Function declarations */
-char *read_file_line(FILE *fp);
-char *get_memo_file_path();
-char *get_memo_conf_path();
-char *get_temp_memo_path();
-char *get_memo_conf_value(const char *prop);
-int   is_valid_date_format(const char *date);
-int   add_note(const char *content, const char *date);
-int   get_next_id();
-int   delete_note(int id);
-int   show_notes(NoteStatus_t status);
-int   count_file_lines(FILE *fp);
-int   search_notes(const char *search);
-int   search_regexp(const char *regexp);
-const char *export_html(const char *path);
-void  output_default(char *line);
-void  output_postponed(char *line);
-void  show_latest(int count);
-FILE *get_memo_file_ptr();
-void  usage();
-void  fail(FILE *out, const char *fmt, ...);
-int   delete_all();
-void  show_current_memo_file_path();
-NoteStatus_t get_note_status(const char *line);
-int   mark_note_status(NoteStatus_t status, int id);
-void  note_status_replace(char *line, char *new, char *old);
-void  mark_as_done(FILE *fp, char *line);
-void  mark_as_undone(FILE *fp, char *line);
-void  mark_as_postponed(FILE *fp, char *line);
+static char *read_file_line(FILE *fp);
+static char *get_memo_file_path();
+static char *get_memo_conf_path();
+static char *get_temp_memo_path();
+static char *get_memo_conf_value(const char *prop);
+static int   is_valid_date_format(const char *date);
+static int   add_note(const char *content, const char *date);
+static int   get_next_id();
+static int   delete_note(int id);
+static int   show_notes(NoteStatus_t status);
+static int   count_file_lines(FILE *fp);
+static int   search_notes(const char *search);
+static int   search_regexp(const char *regexp);
+static const char *export_html(const char *path);
+static void  output_default(char *line);
+static void  output_postponed(char *line);
+static void  show_latest(int count);
+static FILE *get_memo_file_ptr();
+static void  usage();
+static void  fail(FILE *out, const char *fmt, ...);
+static int   delete_all();
+static void  show_memo_file_path();
+static NoteStatus_t get_note_status(const char *line);
+static int   mark_note_status(NoteStatus_t status, int id);
+static void  note_status_replace(char *line, char *new, char *old);
+static void  mark_as_done(FILE *fp, char *line);
+static void  mark_as_undone(FILE *fp, char *line);
+static void  mark_as_postponed(FILE *fp, char *line);
 
 #define VERSION 1.1
 
@@ -98,7 +98,7 @@ void  mark_as_postponed(FILE *fp, char *line);
  *
  * Functions returns 0 on success and -1 on failure.
  */
-int is_valid_date_format(const char *date)
+static int is_valid_date_format(const char *date)
 {
 	int d;
 	int m;
@@ -146,7 +146,7 @@ int is_valid_date_format(const char *date)
  * Returns the count or -1 if the file pointer is null.
  * Caller must close fp after calling the function successfully.
  */
-int count_file_lines(FILE *fp)
+static int count_file_lines(FILE *fp)
 {
 	int count = 0;
 	int ch = 0;
@@ -177,7 +177,7 @@ int count_file_lines(FILE *fp)
 
 
 /* A simple error reporting function */
-void fail(FILE *out, const char *fmt, ...)
+static void fail(FILE *out, const char *fmt, ...)
 {
 	va_list ap;
 
@@ -192,7 +192,7 @@ void fail(FILE *out, const char *fmt, ...)
  * Caller must close the file pointer after calling the function
  * succesfully.
  */
-FILE *get_memo_file_ptr(char *mode)
+static FILE *get_memo_file_ptr(char *mode)
 {
 	FILE *fp = NULL;
 	char *path = get_memo_file_path();
@@ -223,7 +223,7 @@ FILE *get_memo_file_ptr(char *mode)
  * Return NULL on failure.
  * Caller is responsible for freeing the return value
  */
-char *read_file_line(FILE *fp)
+static char *read_file_line(FILE *fp)
 {
 	if (!fp)
 		return NULL;
@@ -275,7 +275,7 @@ char *read_file_line(FILE *fp)
  * If the file is missing or is empty, return 0
  * On error, returns -1
  */
-int get_next_id()
+static int get_next_id()
 {
 	int id = 0;
 	FILE *fp = NULL;
@@ -321,7 +321,7 @@ int get_next_id()
  *
  * Returns the number of notes. Returns -1 on failure
  */
-int show_notes(NoteStatus_t status)
+static int show_notes(NoteStatus_t status)
 {
 	FILE *fp = NULL;
 	char *line;
@@ -361,7 +361,7 @@ int show_notes(NoteStatus_t status)
 /* Search if a note contains the search term.
  * Returns the count of found notes or -1 if function fails.
  */
-int search_notes(const char *search)
+static int search_notes(const char *search)
 {
 	FILE *fp = NULL;
 	int count = 0;
@@ -404,7 +404,7 @@ int search_notes(const char *search)
 /* Search using regular expressions (POSIX Basic Regular Expression syntax)
  * Returns the count of found notes or -1 if functions fails.
  */
-int search_regexp(const char *regexp)
+static int search_regexp(const char *regexp)
 {
 	int count = 0;
 	regex_t regex;
@@ -463,7 +463,7 @@ int search_regexp(const char *regexp)
 
 
 /* Replace note status old with new status in line.*/
-void note_status_replace(char *line, char *old, char *new)
+static void note_status_replace(char *line, char *old, char *new)
 {
 	char *ptr = NULL;
 
@@ -484,7 +484,7 @@ void note_status_replace(char *line, char *old, char *new)
 /* Get the note status from the note line.
  * Returns STATUS_ERROR on failure.
  */
-NoteStatus_t get_note_status(const char *line)
+static NoteStatus_t get_note_status(const char *line)
 {
 	char *token = NULL;
 	char *buffer = NULL;
@@ -528,7 +528,7 @@ NoteStatus_t get_note_status(const char *line)
 
 
 /* Simple helper function to mark note as done */
-void mark_as_done(FILE *fp, char *line)
+static void mark_as_done(FILE *fp, char *line)
 {
 	if (get_note_status(line) == POSTPONED)
 		note_status_replace(line, "P", "D");
@@ -540,7 +540,7 @@ void mark_as_done(FILE *fp, char *line)
 
 
 /* Simple helper function to mark note as undone */
-void mark_as_undone(FILE *fp, char *line)
+static void mark_as_undone(FILE *fp, char *line)
 {
 	if (get_note_status(line) == POSTPONED)
 		note_status_replace(line, "P", "U");
@@ -552,7 +552,7 @@ void mark_as_undone(FILE *fp, char *line)
 
 
 /* Simple helper function to mark note as postponed */
-void mark_as_postponed(FILE *fp, char *line)
+static void mark_as_postponed(FILE *fp, char *line)
 {
 	/* Only UNDONE notes can be postponed */
 	if (get_note_status(line) == UNDONE) {
@@ -574,7 +574,7 @@ void mark_as_postponed(FILE *fp, char *line)
 
  * id is ignored when status is DELETE_DONE or ALL_DONE.
  */
-int mark_note_status(NoteStatus_t status, int id)
+static int mark_note_status(NoteStatus_t status, int id)
 {
 	FILE *fp = NULL;
 	FILE *tmpfp = NULL;
@@ -689,7 +689,7 @@ int mark_note_status(NoteStatus_t status, int id)
 /* This functions handles the output of one line.
  * Postponed notes are ignored.
  */
-void output_default(char *line)
+static void output_default(char *line)
 {
 	if (get_note_status(line) != POSTPONED)
 		printf("%s\n", line);
@@ -700,7 +700,7 @@ void output_default(char *line)
  * Called from show_notes when command line option -P
  * is used.
  */
-void output_postponed(char *line)
+static void output_postponed(char *line)
 {
 	if (get_note_status(line) == POSTPONED)
 		printf("%s\n", line);
@@ -710,7 +710,7 @@ void output_postponed(char *line)
 /* Export current .memo file to a html file
  * Return the path of the html file, or NULL on failure.
  */
-const char *export_html(const char *path)
+static const char *export_html(const char *path)
 {
 	FILE *fp = NULL;
 	FILE *fpm = NULL;
@@ -762,7 +762,7 @@ const char *export_html(const char *path)
 
 
 /* Show latest n notes */
-void show_latest(int n)
+static void show_latest(int n)
 {
 	FILE *fp = NULL;
 	char *line;
@@ -806,7 +806,7 @@ void show_latest(int n)
  * simply removes .memo file.
  * Returns 0 on success, -1 on failure.
  */
-int delete_all()
+static int delete_all()
 {
 	char *path = get_memo_file_path();
 
@@ -828,7 +828,7 @@ int delete_all()
 /* Delete a note by id.
  * Returns 0 on success and -1 on failure.
  */
-int delete_note(int id)
+static int delete_note(int id)
 {
 	return mark_note_status(DELETE, id);
 }
@@ -838,7 +838,7 @@ int delete_note(int id)
  * On failure NULL is returned.
  * Caller is responsible for freeing the return value.
  */
-char *get_memo_conf_path()
+static char *get_memo_conf_path()
 {
 	char *env = NULL;
 	char *conf_path = NULL;
@@ -879,7 +879,7 @@ char *get_memo_conf_path()
  * NULL is returned on failure.
  * On success, caller must free the return value.
  */
-char *get_memo_conf_value(const char *prop)
+static char *get_memo_conf_value(const char *prop)
 {
 	char *retval = NULL;
 	char *conf_path = NULL;
@@ -975,7 +975,7 @@ char *get_memo_conf_value(const char *prop)
  * Returns the path to .memo file or NULL on failure.
  * Caller is responsible for freeing the return value.
  */
-char *get_memo_file_path()
+static char *get_memo_file_path()
 {
 	char *path = NULL;
 	char *env_path = NULL;
@@ -1049,7 +1049,7 @@ char *get_memo_file_path()
  *
  * Returns NULL on failure.
  */
-char *get_temp_memo_path()
+static char *get_temp_memo_path()
 {
 	char *orig = get_memo_file_path();
 
@@ -1089,7 +1089,7 @@ char *get_temp_memo_path()
  * Note will be marked with status "U" which means it's "undone".
  * "D" means "done". With status P, note is marked as postponed.
  */
-int add_note(const char *content, const char *date)
+static int add_note(const char *content, const char *date)
 {
 	FILE *fp = NULL;
 	time_t t;
@@ -1136,7 +1136,7 @@ int add_note(const char *content, const char *date)
 }
 
 
-void usage()
+static void usage()
 {
 #define HELP "\
 SYNOPSIS\n\
@@ -1216,7 +1216,7 @@ AUTHORS\n\
 }
 
 
-void show_current_memo_file_path()
+static void show_memo_file_path()
 {
 	char *path = NULL;
 
@@ -1314,7 +1314,7 @@ int main(int argc, char *argv[])
 	                mark_note_status(UNDONE, atoi(optarg));
 	                break;
 		case 'p':
-			show_current_memo_file_path();
+			show_memo_file_path();
 			break;
 		case 'P':
 			if (argv[optind])
