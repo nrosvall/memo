@@ -90,7 +90,7 @@ void  mark_as_done(FILE *fp, char *line);
 void  mark_as_undone(FILE *fp, char *line);
 void  mark_as_postponed(FILE *fp, char *line);
 
-#define VERSION 1.0
+#define VERSION 1.1
 
 
 /* Check if given date is in valid date format.
@@ -565,7 +565,7 @@ void mark_as_postponed(FILE *fp, char *line)
 
 
 /* Mark note by status U is undone, D is done or P
- * postponed. When status is DELETE, the note with 
+ * postponed. When status is DELETE, the note with
  * a matching id will be deleted.
  *
  * Function will create a temporary file to write
@@ -626,7 +626,7 @@ int mark_note_status(NoteStatus_t status, int id)
 			switch(status) {
 
 			case DONE:
-				if (curr == id) 
+				if (curr == id)
 					mark_as_done(tmpfp, line);
 				else
 					fprintf(tmpfp, "%s\n", line);
@@ -661,7 +661,7 @@ int mark_note_status(NoteStatus_t status, int id)
 					mark_as_postponed(tmpfp, line);
 				else
 					fprintf(tmpfp, "%s\n", line);
-				break;		
+				break;
 			}
 
 			free(line);
@@ -966,10 +966,10 @@ char *get_memo_conf_value(const char *prop)
 }
 
 
-/* Function reads MEMO_PATH environment variable to see 
+/* Function reads MEMO_PATH environment variable to see
  * if it's set and uses value from it as a path.
- * When MEMO_PATH is not set, function reads $HOME/.memorc file. 
- * If the file is not found $HOME/.memo is used as a fallback 
+ * When MEMO_PATH is not set, function reads $HOME/.memorc file.
+ * If the file is not found $HOME/.memo is used as a fallback
  * path.
  *
  * Returns the path to .memo file or NULL on failure.
