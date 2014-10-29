@@ -1069,6 +1069,9 @@ int add_note(const char *content, const char *date)
 	int id = -1;
 	char note_date[11];
 
+	if (strlen(content) == 0)
+		return -1;
+
 	fp = get_memo_file_ptr("a");
 
 	if (fp == NULL) {
