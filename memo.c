@@ -492,6 +492,10 @@ NoteStatus_t get_note_status(const char *line)
 
 	status = STATUS_ERROR;
 
+	/* Sanity check for an empty line */
+	if(strlen(line) == 0)
+		return status;
+
 	buffer = (char*)malloc((strlen(line) + 1) * sizeof(char));
 
 	if (buffer == NULL) {
@@ -962,14 +966,38 @@ char *get_memo_conf_value(const char *prop)
 }
 
 
-/*
+/* Function reads MEMO_PATH environment variable to see 
+ * if it's set and uses value from it as a path.
+ * When MEMO_PATH is not set, function reads $HOME/.memorc file. 
+ * If the file is not found $HOME/.memo is used as a fallback 
+ * path.
+ *
  * Returns the path to .memo file or NULL on failure.
  * Caller is responsible for freeing the return value.
  */
 char *get_memo_file_path()
 {
-	char *env = getenv("HOME");
 	char *path = NULL;
+	char *env_path = NULL;
+
+
+	env_path = getenv("MEMO_PATH");
+	/* Try and see if environment variable MEMO_PATH is set
+	 * and use value from it as a path */
+	if (env_path != NULL) {
+		/* +1 for \0 byte */
+		path = (char*)malloc((strlen(env_path) + 1) * sizeof(char));
+
+		if (path == NULL) {
+			fail(stderr, "%s malloc failed\n", __func__);
+			return NULL;
+		}
+		strcpy(path, env_path);
+
+		return path;
+	}
+
+	char *env = getenv("HOME");
 	size_t len = 0;
 	char *conf_path = NULL;
 
@@ -1069,6 +1097,7 @@ int add_note(const char *content, const char *date)
 	int id = -1;
 	char note_date[11];
 
+	/* Do not add an empty note */
 	if (strlen(content) == 0)
 		return -1;
 
