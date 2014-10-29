@@ -75,6 +75,12 @@ Only undone notes can be postponed.
 It's possible to change the location (and name) of the .memo
 file. Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like
 , Memo will use that path instead of the default $HOME/.memo path.
+.PP
+It's also possible to set memo path using an environment variable.
+For example: export MEMO_PATH=/path/to/some/file. If MEMO_PATH
+environment variable is set that will be used. If it's not set,
+Memo will try to read $HOME/.memorc. If the file does not exist
+or has errors, Memo will use $HOME/.memo file to store the notes.
 .SH FILES
 .I $HOME/.memo
 .I $HOME/.memorc
