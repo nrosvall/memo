@@ -782,7 +782,7 @@ static void show_latest(int n)
 
 			if (line) {
 				if (current > start)
-					output_default(line);
+					printf("%s\n", line);
 				free(line);
 			}
 
