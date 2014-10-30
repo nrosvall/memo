@@ -63,6 +63,7 @@ typedef enum {
 /* Function declarations */
 static char *read_file_line(FILE *fp);
 static char *get_memo_file_path();
+static char *get_memo_default_path();
 static char *get_memo_conf_path();
 static char *get_temp_memo_path();
 static char *get_memo_conf_value(const char *prop);
@@ -89,6 +90,7 @@ static void  note_status_replace(char *line, char new, char old);
 static void  mark_as_done(FILE *fp, char *line);
 static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
+
 
 #define VERSION 1.2
 
@@ -802,6 +804,19 @@ static void show_latest(int n)
  */
 static int delete_all()
 {
+	char *confirm = NULL;
+	int ask = 1;
+
+	confirm = get_memo_conf_value("MEMO_CONFIRM_DELETE");
+
+	if (confirm) {
+
+		if (strcmp(confirm, "no") == 0)
+			ask = 0;
+
+		free(confirm);
+	}
+
 	char *path = get_memo_file_path();
 
 	if (path == NULL) {
@@ -809,8 +824,19 @@ static int delete_all()
 		return -1;
 	}
 
-	if (remove(path) != 0) {
-		fail(stderr,"%s error removing %s\n", __func__, path);
+	if (ask) {
+		printf("Really delete (y/N)? ");
+		char ch = getc(stdin);
+		if (ch == 'y' || ch == 'Y') {
+			if (remove(path) != 0) {
+				fail(stderr, 
+					"%s error removing %s\n", __func__, 
+					path);
+			}
+		}
+	} else {
+		if (remove(path) != 0)
+			fail(stderr,"%s error removing %s\n", __func__, path);
 	}
 
 	free(path);
@@ -878,7 +904,6 @@ static char *get_memo_conf_value(const char *prop)
 	char *retval = NULL;
 	char *conf_path = NULL;
 	FILE *fp = NULL;
-	int prop_found = 0;
 
 	conf_path = get_memo_conf_path();
 
@@ -888,8 +913,6 @@ static char *get_memo_conf_value(const char *prop)
 	fp = fopen(conf_path, "r");
 
 	if (fp == NULL) {
-		fail(stderr, "%s: fopen %s failed \n", __func__, conf_path);
-
 		free(conf_path);
 		return NULL;
 	}
@@ -910,8 +933,6 @@ static char *get_memo_conf_value(const char *prop)
 
 		if (line) {
 			if (strncmp(line, prop, strlen(prop)) == 0) {
-
-				prop_found = 1;
 
 				/* Property found, get the value */
 				char *token = strtok(line, "=");
@@ -950,13 +971,45 @@ static char *get_memo_conf_value(const char *prop)
 		lines--;
 	}
 
-	if(!prop_found)
-		printf("%s not found in %s\n", prop, conf_path);
-
 	fclose(fp);
 	free(conf_path);
 
 	return retval;
+}
+
+
+/* Returns the default path
+ * Default path is ~/.memo
+ * 
+ * Caller must free the return value.
+ * On failure NULL is returned.
+ */
+static char *get_memo_default_path()
+{
+	char *path = NULL;
+	char *env = getenv("HOME");
+	size_t len = 0;
+
+	if (env == NULL){
+		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
+		return NULL;
+	}
+
+	/* +1 for \0 byte */
+	len = strlen(env) + 1;
+
+	/* +6 to have space for \"/.memo\" */
+	path = (char*)malloc( (len + 6) * sizeof(char));
+
+	if (path == NULL) {
+		fail(stderr,"%s: malloc failed\n", __func__);
+		return NULL;
+	}
+
+	strcpy(path, env);
+	strcat(path, "/.memo");
+
+	return path;
 }
 
 
@@ -974,7 +1027,6 @@ static char *get_memo_file_path()
 	char *path = NULL;
 	char *env_path = NULL;
 
-
 	env_path = getenv("MEMO_PATH");
 	/* Try and see if environment variable MEMO_PATH is set
 	 * and use value from it as a path */
@@ -991,8 +1043,6 @@ static char *get_memo_file_path()
 		return path;
 	}
 
-	char *env = getenv("HOME");
-	size_t len = 0;
 	char *conf_path = NULL;
 
 	conf_path = get_memo_conf_path();
@@ -1000,34 +1050,26 @@ static char *get_memo_file_path()
 	if (conf_path == NULL)
 		return NULL;
 
-	if (env == NULL){
-		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
-		return NULL;
-	}
-
-	/* +1 for \0 byte */
-	len = strlen(env) + 1;
 
 	if (access(conf_path,F_OK) != 0) {
-
 		/* Config file not found, so fallback to ~/.memo */
-
-		/* +6 to have space for \"/.memo\" */
-		path = (char*)malloc( (len + 6) * sizeof(char));
-
-		if (path == NULL) {
-			fail(stderr,"%s: malloc failed\n", __func__);
-			free(conf_path);
-			return NULL;
-		}
-
-		strcpy(path, env);
-		strcat(path, "/.memo");
+		path = get_memo_default_path();
 
 	} else {
 		/* Configuration file found, read .memo location
 		   from it */
 		path = get_memo_conf_value("MEMO_PATH");
+		
+		if (path == NULL) {
+			/* Failed to get the path. Most likely user did not
+			 * specify MEMO_PATH in the configuration file at all
+			 * and configuration file is used for setting other
+			 * properties like MEMO_CONFIRM_DELETE.
+			 *
+			 * Let's default to ~/.memo
+			 */
+			path = get_memo_default_path();
+		}
 
 	}
 
