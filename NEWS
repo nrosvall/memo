@@ -1,7 +1,7 @@
 1.2: 2014-10-30
 	Bugfix version 1.2 released.
 
-	This is an important fix and everyone must updagrade.
+	This is an important fix and everyone must upgrade.
 	Memo assumed that the is is always one char long. This caused
 	a problem where note status could not be changed if the id was
 	> 9.
