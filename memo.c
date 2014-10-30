@@ -85,7 +85,7 @@ static int   delete_all();
 static void  show_memo_file_path();
 static NoteStatus_t get_note_status(const char *line);
 static int   mark_note_status(NoteStatus_t status, int id);
-static void  note_status_replace(char *line, char *new, char *old);
+static void  note_status_replace(char *line, char new, char old);
 static void  mark_as_done(FILE *fp, char *line);
 static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
@@ -463,20 +463,14 @@ static int search_regexp(const char *regexp)
 
 
 /* Replace note status old with new status in line.*/
-static void note_status_replace(char *line, char *old, char *new)
+static void note_status_replace(char *line, char old, char new)
 {
-	char *ptr = NULL;
-
-	ptr = strstr(line, old);
-
-	if (ptr != NULL) {
-		int diff = strlen(line) - strlen(ptr);
-		/* Make sure we have the match of the status
-		 * string and not something in the content
-		 * of the note.
-		 */
-		if (diff == 2)
-			strncpy(ptr, new, 1);
+	while (*line) {
+		if (*line == old) {
+			*line = new;
+			break;
+		}
+		line++;
 	}
 }
 
@@ -531,9 +525,9 @@ static NoteStatus_t get_note_status(const char *line)
 static void mark_as_done(FILE *fp, char *line)
 {
 	if (get_note_status(line) == POSTPONED)
-		note_status_replace(line, "P", "D");
+		note_status_replace(line, 'P', 'D');
 	else
-		note_status_replace(line, "U", "D");
+		note_status_replace(line, 'U', 'D');
 
 	fprintf(fp, "%s\n", line);
 }
@@ -543,9 +537,9 @@ static void mark_as_done(FILE *fp, char *line)
 static void mark_as_undone(FILE *fp, char *line)
 {
 	if (get_note_status(line) == POSTPONED)
-		note_status_replace(line, "P", "U");
+		note_status_replace(line, 'P', 'U');
 	else
-		note_status_replace(line, "D", "U");
+		note_status_replace(line, 'D', 'U');
 
 	fprintf(fp, "%s\n", line);
 }
@@ -556,7 +550,7 @@ static void mark_as_postponed(FILE *fp, char *line)
 {
 	/* Only UNDONE notes can be postponed */
 	if (get_note_status(line) == UNDONE) {
-		note_status_replace(line, "U", "P");
+		note_status_replace(line, 'U', 'P');
 		fprintf(fp, "%s\n", line);
 	} else {
 		fprintf(fp, "%s\n", line);
@@ -653,7 +647,7 @@ static int mark_note_status(NoteStatus_t status, int id)
 				fail(stderr,"STATUS_ERROR, this shouldn't happen\n");
 				break;
 			case ALL_DONE:
-				note_status_replace(line, "U", "D");
+				note_status_replace(line, 'U', 'D');
 				fprintf(tmpfp, "%s\n", line);
 				break;
 			case POSTPONED:
