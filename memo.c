@@ -68,6 +68,7 @@ static char *get_memo_conf_path();
 static char *get_temp_memo_path();
 static char *get_memo_conf_value(const char *prop);
 static int   is_valid_date_format(const char *date);
+static void  remove_content_newlines(char *content);
 static int   add_note(char *content, const char *date);
 static int   get_next_id();
 static int   delete_note(int id);
@@ -1109,6 +1110,25 @@ static char *get_temp_memo_path()
 }
 
 
+/* Remove new lines from the content.
+ * Sometimes user might want to type multiline
+ * note. This functions makes it one liner.
+ */
+static void remove_content_newlines(char *content)
+{
+	char *i = content;
+	char *j = content;
+
+	while (*j != '\0') {
+		*i = *j++;
+		if (*i != '\n')
+			i++;
+	}
+
+	*i = '\0';
+}
+
+
 /* .memo file format is following:
  *
  * id     status     date           content
@@ -1137,8 +1157,7 @@ static int add_note(char *content, const char *date)
 	if (strlen(content) == 0)
 		return -1;
 
-	if (content[strlen(content)] == '\n')
-		content[strlen(content) - 1] = '\0';
+	remove_content_newlines(content);
 
 	fp = get_memo_file_ptr("a");
 
