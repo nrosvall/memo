@@ -73,6 +73,7 @@ static int   add_note(char *content, const char *date);
 static int   get_next_id();
 static int   delete_note(int id);
 static int   show_notes(NoteStatus_t status);
+static int   show_notes_tree();
 static int   count_file_lines(FILE *fp);
 static int   search_notes(const char *search);
 static int   search_regexp(const char *regexp);
@@ -353,6 +354,162 @@ static int show_notes(NoteStatus_t status)
 		}
 
 		lines--;
+	}
+
+	fclose(fp);
+
+	return count;
+}
+
+static char *get_note_date(char *line)
+{
+	char *date = NULL;
+	char *tmpline = strdup(line);
+	char *datetoken = NULL;
+
+	if (tmpline == NULL)
+		return NULL;
+
+	datetoken = strtok(tmpline, "\t");
+	datetoken = strtok(NULL, "\t");
+	datetoken = strtok(NULL, "\t");
+
+	if (datetoken == NULL) {
+		free(tmpline);
+		return NULL;
+	}
+
+	date = (char*)malloc((strlen(datetoken) + 1) * sizeof(char));
+	
+	if (date == NULL) {
+		free(tmpline);
+		return NULL;
+	}
+
+	strcpy(date, datetoken);
+
+	free(tmpline);
+
+	return date;
+}
+
+/* Function displays notes ordered by date.
+ *
+ * For example:
+ *
+ *   2014-11-01
+ *         1   U   Release Memo 1.3
+ *         2   D   Pay rent
+ *   2014-11-02
+ *         3   P   Go shopping
+ *
+ * Returns the count of the notes. On failure returns -1.
+ */
+static int show_notes_tree()
+{
+	int count = 0;
+	int lines = 0;
+	FILE *fp = NULL;
+	int date_index = 0;
+
+	fp = get_memo_file_ptr("r");
+	lines = count_file_lines(fp);
+	
+	if (lines == -1) {
+		fail(stderr, "%s: counting lines failed\n", __func__);
+		return -1;
+	}
+
+	int n = lines;
+	char *dates[lines];
+
+	memset(dates, 0, sizeof(dates));
+
+	/* Get the date of each note and store the pointer
+	 * of it to dates array
+	 */
+	while (n >= 0) {
+		char *line = read_file_line(fp);
+		if (line) {
+			char *date = get_note_date(line);
+			int has_date = 0;
+
+			if (date == NULL) {
+				free(line);
+				fclose(fp);
+				return -1;
+			}
+			/* Prevent storing duplicate dates*/
+			for (int i = 0; i < date_index; i++) {
+				if (dates[i]) {
+					if (strcmp(dates[i], date) == 0) {
+						has_date = 1;
+						break;
+					}
+				}
+			}
+
+			/* If dates does not contain date, store it
+			 * otherwise free it
+			 */
+			if (!has_date)
+				dates[date_index] = date;
+			else
+				free(date);
+
+			date_index++;
+			count++;
+			free(line);
+		}
+		n--;
+	}
+
+	/* Loop through all dates and print all notes for
+	 * the date.
+	 */
+	for (int i = 0; i <= lines; i++) {
+		/* Rewind file pointer to beginning every time to
+		 * loop all the notes in the file.
+		 * It's possible that the array is not fully populated (because
+		 * it's allocated to have as many elements as we have notes,
+		 * however duplicate dates are not stored at all.
+		 * so do a check if the value is null.
+		 */
+		if (dates[i]) {
+			n = lines;
+			rewind(fp);
+			printf("%s\n", dates[i]);
+			while (n >= 0) {
+				char *line = read_file_line(fp);
+				if (line) {
+					char *date = get_note_date(line);
+					if (date == NULL) {
+						free(line);
+						fclose(fp);
+						return -1;
+					}
+				
+					if (strcmp(date, dates[i]) == 0) {
+						char *token = strtok(line, "\t");
+						/* Print the id */
+						printf("\t%s\t", token);
+						token = strtok(NULL, "\t");
+						/* Print the status */
+						printf("%s\t", token);
+						token = strtok(NULL, "\t");
+						token = strtok(NULL, "\t");
+						/* Print the content */
+						printf("%s\n", token);
+
+					}
+
+					free(line);
+					free(date);
+				}
+				n--;
+			}
+			free(dates[i]);
+		}
 	}
 
 	fclose(fp);
@@ -1209,6 +1366,7 @@ OPTIONS\n\
     -e <path>                    Export notes as html to a file\n\
     -f <search>                  Find notes by search term\n\
     -F <regex>                   Find notes by regular expression\n\
+    -i                           Show all notes organized by date\n\
     -l <n>                       Show latest n notes\n\
     -m <id>                      Mark note status as done\n\
     -M <id>                      Mark note status as undone\n\
@@ -1331,7 +1489,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:pPRsTV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hil:m:M:pPRsTV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -1362,6 +1520,9 @@ int main(int argc, char *argv[])
 		case 'h':
 			usage();
 			break;
+case 'i':
+	show_notes_tree();
+	break;
 		case 'l':
 			show_latest(atoi(optarg));
 			break;
@@ -1404,7 +1565,7 @@ int main(int argc, char *argv[])
 			else if (optopt == 'F')
 				printf("-F missing an argument <regex>\n");
 			else if (optopt == 'l')
-				printf("-l missing an argument <id>\n");
+				printf("-l missing an argument <n>\n");
 			else if (optopt == 'm')
 				printf("-m missing an argument <id>\n");
 			else if(optopt == 'M')

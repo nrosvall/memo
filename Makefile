@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Werror
+CFLAGS=-std=c99 -Wall -Werror
 PREFIX=/usr/local
 
 all: memo
