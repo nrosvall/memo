@@ -428,7 +428,7 @@ static int show_notes_tree()
 	}
 
 	int n = lines;
-	char *dates[lines];
+	char *dates[lines + 1];
 
 	memset(dates, 0, sizeof(dates));
 
@@ -474,7 +474,7 @@ static int show_notes_tree()
 	/* Loop through all dates and print all notes for
 	 * the date.
 	 */
-	for (int i = 0; i < lines; i++) {
+	for (int i = 0; i <= lines; i++) {
 		/* Rewind file pointer to beginning every time to
 		 * loop all the notes in the file.
 		 * It's possible that the array is not fully populated (because
