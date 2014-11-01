@@ -361,6 +361,12 @@ static int show_notes(NoteStatus_t status)
 	return count;
 }
 
+
+/* Function returns the date string of the note.
+ *
+ * On success caller must free the return value. 
+ * NULL is returned on failure.
+ */
 static char *get_note_date(char *line)
 {
 	char *date = NULL;
@@ -393,6 +399,7 @@ static char *get_note_date(char *line)
 	return date;
 }
 
+
 /* Function displays notes ordered by date.
  *
  * For example:
@@ -401,7 +408,7 @@ static char *get_note_date(char *line)
  *         1   U   Release Memo 1.3
  *         2   D   Pay rent
  *   2014-11-02
- *         3   P   Go shopping
+ *         3   D   Go shopping
  *
  * Returns the count of the notes. On failure returns -1.
  */
@@ -467,7 +474,7 @@ static int show_notes_tree()
 	/* Loop through all dates and print all notes for
 	 * the date.
 	 */
-	for (int i = 0; i <= lines; i++) {
+	for (int i = 0; i < lines; i++) {
 		/* Rewind file pointer to beginning every time to
 		 * loop all the notes in the file.
 		 * It's possible that the array is not fully populated (because
