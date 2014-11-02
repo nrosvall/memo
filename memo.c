@@ -80,6 +80,7 @@ static int   search_regexp(const char *regexp);
 static const char *export_html(const char *path);
 static void  output_default(char *line);
 static void  output_postponed(char *line);
+static void  output_without_date(char *line);
 static void  show_latest(int count);
 static FILE *get_memo_file_ptr();
 static void  usage();
@@ -400,6 +401,38 @@ static char *get_note_date(char *line)
 }
 
 
+static void output_without_date(char *line)
+{
+	char *token = strtok(line, "\t");
+
+	if (token != NULL)
+		printf("\t%s\t", token);
+	else
+		goto error;
+
+	token = strtok(NULL, "\t");
+
+	if (token != NULL)
+		printf("%s\t", token);
+	else
+		goto error;
+
+	token = strtok(NULL, "\t");
+	token = strtok(NULL, "\t");
+
+	if (token != NULL)
+		printf("%s\n", token);
+	else
+		goto error;
+
+	return;
+
+error:
+	fail(stderr, "%s parsing line failed\n", __func__);
+
+}
+
+
 /* Function displays notes ordered by date.
  *
  * For example:
@@ -444,6 +477,8 @@ static int show_notes_tree()
 			if (date == NULL) {
 				free(line);
 				fclose(fp);
+				fail(stderr, "%s problem getting date\n",
+					__func__);
 				return -1;
 			}
 			/* Prevent storing duplicate dates*/
@@ -496,19 +531,8 @@ static int show_notes_tree()
 						return -1;
 					}
 				
-					if (strcmp(date, dates[i]) == 0) {
-						char *token = strtok(line, "\t");
-						/* Print the id */
-						printf("\t%s\t", token);
-						token = strtok(NULL, "\t");
-						/* Print the status */
-						printf("%s\t", token);
-						token = strtok(NULL, "\t");
-						token = strtok(NULL, "\t");
-						/* Print the content */
-						printf("%s\n", token);
-
-					}
+					if (strcmp(date, dates[i]) == 0)
+						output_without_date(line);
 
 					free(line);
 					free(date);
