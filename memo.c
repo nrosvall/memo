@@ -1397,10 +1397,10 @@ OPTIONS\n\
     -e <path>                    Export notes as html to a file\n\
     -f <search>                  Find notes by search term\n\
     -F <regex>                   Find notes by regular expression\n\
-    -i                           Show all notes organized by date\n\
     -l <n>                       Show latest n notes\n\
     -m <id>                      Mark note status as done\n\
     -M <id>                      Mark note status as undone\n\
+    -o                           Show all notes organized by date\n	\
     -p                           Show current memo file path\n\
     -P [id]                      Show postponed or mark note as postponed\n\
     -R                           Delete all notes marked as done\n\
@@ -1520,7 +1520,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hil:m:M:pPRsTV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:opPRsTV")) != -1){
 		has_valid_options = 1;
 
 		switch(c){
@@ -1551,9 +1551,9 @@ int main(int argc, char *argv[])
 		case 'h':
 			usage();
 			break;
-case 'i':
-	show_notes_tree();
-	break;
+		case 'o':
+			show_notes_tree();
+			break;
 		case 'l':
 			show_latest(atoi(optarg));
 			break;
