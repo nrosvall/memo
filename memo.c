@@ -68,6 +68,7 @@ static char *get_memo_conf_path();
 static char *get_temp_memo_path();
 static char *get_memo_conf_value(const char *prop);
 static int   is_valid_date_format(const char *date);
+static int   file_exists(const char *path);
 static void  remove_content_newlines(char *content);
 static int   add_note(char *content, const char *date);
 static int   get_next_id();
@@ -137,6 +138,28 @@ static int is_valid_date_format(const char *date)
 	fail(stderr, "%s: parsing date failed\n", __func__);
 
 	return -1;
+}
+
+
+/* Functions checks if file exists.
+ * This should be more reliable than using access().
+ *
+ * Returns 1 when the file is found and 0
+ * when it's not found.
+ *
+ * Please note that 0 could be returned even if
+ * the file exists but there are other problems accessing it.
+ * See http://pubs.opengroup.org/onlinepubs/009695399/functions/stat.html
+ */
+static int file_exists(const char *path)
+{
+	int retval = 0;
+	struct stat buffer;
+
+	if (stat(path, &buffer) == 0)
+		retval = 1;
+
+	return retval;
 }
 
 
@@ -343,6 +366,12 @@ static int show_notes(NoteStatus_t status)
 		return -1;
 	}
 
+	/* Ignore empty note file and exit */
+	if (lines == 0) {
+		fclose(fp);
+		return -1;
+	}
+
 	while (lines >= 0) {
 		line = read_file_line(fp);
 
@@ -460,6 +489,12 @@ static int show_notes_tree()
 		return -1;
 	}
 
+	/* Ignore empty note file and exit */
+	if (lines == 0) {
+		fclose(fp);
+		return -1;
+	}
+
 	int n = lines;
 	char *dates[lines + 1];
 
@@ -568,6 +603,12 @@ static int search_notes(const char *search)
 		return -1;
 	}
 
+	/* Ignore empty note file and exit */
+	if (lines == 0) {
+		fclose(fp);
+		return -1;
+	}
+
 	while (lines >= 0) {
 		line = read_file_line(fp);
 
@@ -618,6 +659,12 @@ static int search_regexp(const char *regexp)
 	if (lines == -1) {
 		regfree(&regex);
 		fail(stderr,"%s: counting lines failed\n", __func__);
+		return -1;
+	}
+
+	/* Ignore empty note file and exit */
+	if (lines == 0) {
+		regfree(&regex);
 		return -1;
 	}
 
@@ -767,6 +814,20 @@ static int mark_note_status(NoteStatus_t status, int id)
 	char *tmp;
 	int lines = 0;
 
+	fp = get_memo_file_ptr("r");
+	lines = count_file_lines(fp);
+
+	if (lines == -1) {
+		fail(stderr,"%s: counting lines failed\n", __func__);
+		return -1;
+	}
+
+	/* Ignore empty note file and exit */
+	if (lines == 0) {
+		fclose(fp);
+		return -1;
+	}
+
 	tmp = get_temp_memo_path();
 
 	if (tmp == NULL) {
@@ -791,15 +852,6 @@ static int mark_note_status(NoteStatus_t status, int id)
 		return -1;
 	}
 
-	fp = get_memo_file_ptr("r");
-	lines = count_file_lines(fp);
-
-	if (lines == -1) {
-		free(memofile);
-		fclose(tmpfp);
-		fail(stderr,"%s: counting lines failed\n", __func__);
-		return -1;
-	}
 
 	while (lines >= 0) {
 		line = read_file_line(fp);
@@ -858,7 +910,7 @@ static int mark_note_status(NoteStatus_t status, int id)
 	fclose(fp);
 	fclose(tmpfp);
 
-	if (access(memofile, F_OK) == 0)
+	if (file_exists(memofile))
 		remove(memofile);
 
 	rename(tmp, memofile);
@@ -914,6 +966,11 @@ static const char *export_html(const char *path)
 
 	if (lines == -1) {
 		fail(stderr, "%s: counting lines failed\n", __func__);
+		return NULL;
+	}
+
+	if (lines == 0) {
+		printf("Nothing to export.\n");
 		return NULL;
 	}
 
@@ -1240,7 +1297,7 @@ static char *get_memo_file_path()
 		return NULL;
 
 
-	if (access(conf_path,F_OK) != 0) {
+	if (!file_exists(conf_path)) {
 		/* Config file not found, so fallback to ~/.memo */
 		path = get_memo_default_path();
 
@@ -1492,7 +1549,7 @@ int main(int argc, char *argv[])
 	if (path == NULL)
 		return -1;
 
-	if (access(path,F_OK) != 0) {
+	if (!file_exists(path)) {
 		int fd = open(path, O_RDWR | O_CREAT,
 			S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
