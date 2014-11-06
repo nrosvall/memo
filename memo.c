@@ -835,6 +835,7 @@ static int mark_note_status(NoteStatus_t status, int id)
 	/* Ignore empty note file and exit */
 	if (lines == -2) {
 		fclose(fp);
+		printf("Nothing to do. No notes found\n");
 		return -1;
 	}
 
