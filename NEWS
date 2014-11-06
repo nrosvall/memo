@@ -1,3 +1,24 @@
+1.3: 2014-11-06
+	Version 1.3 released.
+
+	This release brings new features as well as bugfixes.
+
+	-D option now asks for confirmation. It's possible to disable
+	it via ~/.memorc property. See manpage for more.
+
+	Added -o option to display all notes organized by date.
+
+	Help (-h) is now shorter and all the examples are available
+	in the man page.
+
+	BUGFIX: Memo no longer makes unnecessary file accessing.
+	BUGFIX: Improve error reporting in various ways.
+	BUGFIX: Better way to check if a file exists. This should
+                add reliability and probably fixes problems what 
+		Memo had when running on Jolla mobile phone.
+
+	Thanks for Mikael Berthe for noticing small bugs.
+
 1.2: 2014-10-30
 	Bugfix version 1.2 released.
 
