@@ -1468,7 +1468,7 @@ OPTIONS\n\
     -l <n>                       Show latest n notes\n\
     -m <id>                      Mark note status as done\n\
     -M <id>                      Mark note status as undone\n\
-    -o                           Show all notes organized by date\n	\
+    -o                           Show all notes organized by date\n\
     -p                           Show current memo file path\n\
     -P [id]                      Show postponed or mark note as postponed\n\
     -R                           Delete all notes marked as done\n\
@@ -1478,47 +1478,7 @@ OPTIONS\n\
     -h                           Show short help and exit. This page\n\
     -V                           Show version number of program\n\
 \n\
-DESCRIPTION\n\
-\n\
-    Memo is a note-taking software for POSIX compatible operating systems.\n\
-    The short notes are saved to user's home directory in ~/.memo file\n\
-    by default.\n\
-\n\
-EXAMPLES\n\
-\n\
-    Add a new note:\n\
-        memo -a \"Remember to buy milk!\"\n\
-\n\
-    Add a new note with custom date:\n\
-        memo -a \"File taxes \" 2014-10-14\n\
-\n\
-    Search memos by string:\n\
-        memo -f buy\n\
-\n\
-        Output:\n\
-        4\t2014-10-10\tRemember to buy milk\n\
-\n\
-    Replace record 4 with new text:\n\
-        memo -d 4 -a \"Remember to buy cheese\"\n\
-\n\
-    Add note from stdin:\n\
-        echo \"My new note\" | memo\n\
-\n\
-    Mark note as postponed:\n\
-       memo -P 4\n\
-\n\
-    Show postponed notes:\n\
-      memo -P\n\
-\n\
-    Postponed notes are not shown with -s. Postponed note\n\
-    can be marked as undone or done normally using -m or -M flag.\n\
-    Only undone notes can be postponed.\n\
-\n\
-    It's possible to change the location (and name) of the .memo file.\n\
-    Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like,\n\
-    Memo will use that path instead of the default $HOME/.memo path.\n\
-    Memo path can be also set using an environment variable MEMO_PATH.\n\
-    For example: export MEMO_PATH=/path/to/some/file\n\
+For more information and examples see man memo(1).\n\
 \n\
 AUTHORS\n\
     Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>\n\

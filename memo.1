@@ -1,7 +1,7 @@
 .\" Manpage for memo.
 .\" Any errors or typos, contact niko@ideabyte.net.
 
-.TH man 1 "24 Oct 2014" "1.1" "memo man page"
+.TH man 1 "6 Nov 2014" "1.3" "memo man page"
 .SH NAME
 memo \- unix-style note-taking software
 .SH SYNOPSIS
@@ -29,6 +29,8 @@ Show latest n notes
 Mark note status as done
 .IP "-M <id>"
 Mark note status as undone
+.IP -o
+Show all notes organized by date
 .IP -p
 Show current memo file path
 .IP "-P [id]"
@@ -81,11 +83,16 @@ For example: export MEMO_PATH=/path/to/some/file. If MEMO_PATH
 environment variable is set that will be used. If it's not set,
 Memo will try to read $HOME/.memorc. If the file does not exist
 or has errors, Memo will use $HOME/.memo file to store the notes.
+.PP
+Since version 1.3 -D option asks for confirmation before deleting all
+notes. It's possible to disable this confirmation via ~/.memorc
+property. To disable the confirmation add MEMO_CONFIRM_DELETE=no to
+~/.memorc file.
 .SH FILES
 .I $HOME/.memo
 .I $HOME/.memorc
 .SH AUTHORS
-Written by Niko Rosvall, help written by Jari Aalto.
+Written by Niko Rosvall, first version of help written by Jari Aalto.
 .SH COPYRIGHT
 Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>
 .PP
