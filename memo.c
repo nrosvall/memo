@@ -171,7 +171,9 @@ static int file_exists(const char *path)
  *
  * File pointer is rewinded to the beginning of the file.
  *
- * Returns the count or -1 if the file pointer is null.
+ * Returns the count or -1 if the file pointer is null. -2 is
+ * returned when there are no lines.
+ *
  * Caller must close fp after calling the function successfully.
  */
 static int count_file_lines(FILE *fp)
@@ -192,15 +194,18 @@ static int count_file_lines(FILE *fp)
 			count++;
 	}
 
+
         /* Go to beginning of the file */
 	rewind(fp);
 
         /* return the count, ignoring the last empty line */
-        /* "empty line" is because of the sick way I'm using feof. */
 	if (count == 0)
-		return count;
+		return -2;
 	else
-		return count - 1;
+	return count - 1;
+
+
+	//return count;
 }
 
 
@@ -320,6 +325,11 @@ static int get_next_id()
 		return -1;
 	}
 
+	if (lines == -2) {
+		fclose(fp);
+		return id + 1;
+	}
+
 	while (1) {
 		line = read_file_line(fp);
 
@@ -367,7 +377,7 @@ static int show_notes(NoteStatus_t status)
 	}
 
 	/* Ignore empty note file and exit */
-	if (lines == 0) {
+	if (lines == -2) {
 		fclose(fp);
 		return -1;
 	}
@@ -490,7 +500,7 @@ static int show_notes_tree()
 	}
 
 	/* Ignore empty note file and exit */
-	if (lines == 0) {
+	if (lines == -2) {
 		fclose(fp);
 		return -1;
 	}
@@ -604,7 +614,7 @@ static int search_notes(const char *search)
 	}
 
 	/* Ignore empty note file and exit */
-	if (lines == 0) {
+	if (lines == -2) {
 		fclose(fp);
 		return -1;
 	}
@@ -663,7 +673,7 @@ static int search_regexp(const char *regexp)
 	}
 
 	/* Ignore empty note file and exit */
-	if (lines == 0) {
+	if (lines == -2) {
 		regfree(&regex);
 		return -1;
 	}
@@ -823,7 +833,7 @@ static int mark_note_status(NoteStatus_t status, int id)
 	}
 
 	/* Ignore empty note file and exit */
-	if (lines == 0) {
+	if (lines == -2) {
 		fclose(fp);
 		return -1;
 	}
@@ -969,7 +979,7 @@ static const char *export_html(const char *path)
 		return NULL;
 	}
 
-	if (lines == 0) {
+	if (lines == -2) {
 		printf("Nothing to export.\n");
 		return NULL;
 	}
