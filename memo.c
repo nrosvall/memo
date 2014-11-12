@@ -36,6 +36,12 @@
 /* Make only POSIX.2 regexp functions available */
 #define _POSIX_C_SOURCE 200112L
 
+#ifdef _WIN32
+# undef __STRICT_ANSI__
+# define S_IRGRP 0
+# define S_IROTH 0
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +51,11 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <regex.h>
+#ifdef _WIN32
+# include <pcreposix.h>
+#else
+# include <regex.h>
+#endif
 #include <sys/stat.h>
 
 

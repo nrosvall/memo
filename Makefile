@@ -1,11 +1,16 @@
 CC=gcc
 CFLAGS=-std=c99 -Wall -Werror
 PREFIX=/usr/local
+LDFLAGS=
+
+ifeq ($(OS),Windows_NT)
+LDFLAGS=-lpcre
+endif
 
 all: memo
 
 memo: memo.o
-	$(CC) $(CFLAGS) memo.o -o memo
+	$(CC) $(CFLAGS) memo.o -o memo $(LDFLAGS)
 
 memo.o: memo.c
 	$(CC) $(CFLAGS) -c memo.c
