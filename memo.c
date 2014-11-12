@@ -1132,6 +1132,10 @@ static char *get_memo_conf_path()
 	size_t len = 0;
 
 	env = getenv("HOME");
+#ifdef _WIN32
+	if (env == NULL)
+		env = getenv("USERPROFILE");
+#endif
 
 	if (env == NULL){
 		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
@@ -1254,8 +1258,12 @@ static char *get_memo_conf_value(const char *prop)
 static char *get_memo_default_path()
 {
 	char *path = NULL;
-	char *env = getenv("HOME");
 	size_t len = 0;
+	char *env = getenv("HOME");
+#ifdef _WIN32
+	if (env == NULL)
+		env = getenv("USERPROFILE");
+#endif
 
 	if (env == NULL){
 		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
