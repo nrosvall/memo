@@ -14,7 +14,7 @@ clean:
 	rm memo
 	rm *.o
 
-install:
+install: all
 	if [ ! -d $(PREFIX)/share/man/man1 ];then	\
 		mkdir -p $(PREFIX)/share/man/man1;	\
 	fi
