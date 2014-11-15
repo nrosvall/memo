@@ -90,6 +90,7 @@ static int   search_notes(const char *search);
 static int   search_regexp(const char *regexp);
 static const char *export_html(const char *path);
 static void  output_default(char *line);
+static void  output_undone(char *line);
 static void  output_postponed(char *line);
 static void  output_without_date(char *line);
 static void  show_latest(int count);
@@ -364,6 +365,7 @@ static int get_next_id()
 
 
 /* Show all notes. with status POSTPONED, postponed
+ * notes are shown. With status UNDONE, only undone
  * notes are shown. Otherwise status is ignored and
  * all notes are displayed.
  *
@@ -398,6 +400,8 @@ static int show_notes(NoteStatus_t status)
 		if (line) {
 			if (status == POSTPONED)
 				output_postponed(line);
+			else if (status == UNDONE)
+				output_undone(line);
 			else
 				output_default(line);
 			free(line);
@@ -965,6 +969,16 @@ static void output_postponed(char *line)
 }
 
 
+/* Output notes with status UNDONE.
+ * Called when argument -u is passed for the program.
+ */
+static void output_undone(char *line)
+{
+	if (get_note_status(line) == UNDONE)
+		printf("%s\n", line);
+}
+
+
 /* Export current .memo file to a html file
  * Return the path of the html file, or NULL on failure.
  */
@@ -1490,9 +1504,11 @@ OPTIONS\n\
     -p                           Show current memo file path\n\
     -P [id]                      Show postponed or mark note as postponed\n\
     -R                           Delete all notes marked as done\n\
-    -s                           Show all notes except postponed\n\
+    -s                           Show all notes except postponed (Same as running memo)\n\
     -T                           Mark all notes as done\n\
+    -u                           Show only undone notes\n\
 \n\
+    -                            Read from stdin\n\
     -h                           Show short help and exit. This page\n\
     -V                           Show version number of program\n\
 \n\
@@ -1555,21 +1571,15 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	if (argc == 1) {
-	       /* No options available, so get data from stdin.
-		* Assumes that the data is content for a new note.
-		*/
-		stdinline = read_file_line(stdin);
-
-		if (stdinline) {
-			add_note(stdinline, NULL);
-			free(stdinline);
-		}
+		/* No arguments given, so just show notes */
+		show_notes(-1);
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:opPRsTV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:opPRsTuV")) != -1){
 		has_valid_options = 1;
 
-		switch(c){
+		switch(c) {
+	
 		case 'a':
 			if (argv[optind]) {
 				if (is_valid_date_format(argv[optind]) == 0)
@@ -1627,6 +1637,9 @@ int main(int argc, char *argv[])
 		case 'T':
 			mark_note_status(ALL_DONE, -1);
 			break;
+		case 'u':
+			show_notes(UNDONE);
+			break;
 		case 'V':
 			printf("Memo version %.1f\n", VERSION);
 			break;
@@ -1650,6 +1663,19 @@ int main(int argc, char *argv[])
 			else
 				printf("invalid option, see memo -h for help\n");
 			break;
+		}
+	}
+
+	/* Handle argument '-' to read line from stdin */
+	if (argc > 1 && *argv[argc - 1] == '-' && strlen(argv[argc - 1]) == 1) {
+
+		has_valid_options = 1;
+
+		stdinline = read_file_line(stdin);
+
+		if (stdinline) {
+			add_note(stdinline, NULL);
+			free(stdinline);
 		}
 	}
 
