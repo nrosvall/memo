@@ -81,6 +81,7 @@ static int   is_valid_date_format(const char *date);
 static int   file_exists(const char *path);
 static void  remove_content_newlines(char *content);
 static int   add_note(char *content, const char *date);
+static int   replace_note(int id, const char *data);
 static int   get_next_id();
 static int   delete_note(int id);
 static int   show_notes(NoteStatus_t status);
@@ -820,13 +821,11 @@ static void mark_as_postponed(FILE *fp, char *line)
 }
 
 
-/* Mark note by status U is undone, D is done or P
- * postponed. When status is DELETE, the note with
- * a matching id will be deleted.
+/* Mark note by status U is undone, D is done or P postponed. When
+ * status is DELETE, the note with a matching id will be deleted.
  *
- * Function will create a temporary file to write
- * the memo file with new changes. Then the original
- * file is replaced with the temp file.
+ * Function will create a temporary file to write the memo file with new
+ * changes. Then the original file is replaced with the temp file.
 
  * id is ignored when status is DELETE_DONE or ALL_DONE.
  */
@@ -1135,8 +1134,7 @@ static int delete_note(int id)
 }
 
 
-/* Return the path to $HOME/.memorc.
- * On failure NULL is returned.
+/* Return the path to $HOME/.memorc.  On failure NULL is returned.
  * Caller is responsible for freeing the return value.
  */
 static char *get_memo_conf_path()
@@ -1180,9 +1178,8 @@ static char *get_memo_conf_path()
  *
  * e.g MEMO_PATH=/home/niko/.memo
  *
- * This function returns the value of the property.
- * NULL is returned on failure.
- * On success, caller must free the return value.
+ * This function returns the value of the property. NULL is returned on
+ * failure. On success, caller must free the return value.
  */
 static char *get_memo_conf_value(const char *prop)
 {
@@ -1263,11 +1260,9 @@ static char *get_memo_conf_value(const char *prop)
 }
 
 
-/* Returns the default path
- * Default path is ~/.memo
+/* Returns the default path. Default path is ~/.memo
  * 
- * Caller must free the return value.
- * On failure NULL is returned.
+ * Caller must free the return value. On failure NULL is returned.
  */
 static char *get_memo_default_path()
 {
@@ -1302,14 +1297,13 @@ static char *get_memo_default_path()
 }
 
 
-/* Function reads MEMO_PATH environment variable to see
- * if it's set and uses value from it as a path.
- * When MEMO_PATH is not set, function reads $HOME/.memorc file.
- * If the file is not found $HOME/.memo is used as a fallback
- * path.
+/* Function reads MEMO_PATH environment variable to see if it's set and
+ * uses value from it as a path.  When MEMO_PATH is not set, function
+ * reads $HOME/.memorc file. If the file is not found $HOME/.memo is
+ * used as a fallback path.
  *
- * Returns the path to .memo file or NULL on failure.
- * Caller is responsible for freeing the return value.
+ * Returns the path to .memo file or NULL on failure.  Caller is
+ * responsible for freeing the return value.
  */
 static char *get_memo_file_path()
 {
@@ -1368,8 +1362,7 @@ static char *get_memo_file_path()
 }
 
 
-/* Returns temporary .memo.tmp file.
- * It will be in the same directory
+/* Returns temporary .memo.tmp file.  It will be in the same directory
  * as the original .memo file.
  *
  * Returns NULL on failure.
@@ -1398,9 +1391,8 @@ static char *get_temp_memo_path()
 }
 
 
-/* Remove new lines from the content.
- * Sometimes user might want to type multiline
- * note. This functions makes it one liner.
+/* Remove new lines from the content.  Sometimes user might want to type
+ * multiline note. This functions makes it one liner.
  */
 static void remove_content_newlines(char *content)
 {
@@ -1417,6 +1409,23 @@ static void remove_content_newlines(char *content)
 }
 
 
+/* Function replaces a note content with data.
+ *
+ * Data can be either a valid date or content.  Replace operation is
+ * simply done by creating a temporary file, existing notes are written
+ * line by line to it. Line that has matching id will be written with
+ * new data. Then the original memo file is replaced with the temporary
+ * one.
+ *
+ * Returns 0 on success, -1 on failure.
+ */
+static int replace_note(int id, const char *data)
+{
+
+
+}
+
+
 /* .memo file format is following:
  *
  * id     status     date           content
@@ -1425,13 +1434,12 @@ static void remove_content_newlines(char *content)
  *
  * sections are separated by a tab character
  *
- * Parameter date can be NULL. If date is given
- * in valid format(yyyy-MM-dd) it will be used
- * for creating the note. If date is NULL, current
- * date will be used instead.
+ * Parameter date can be NULL. If date is given in valid
+ * format(yyyy-MM-dd) it will be used for creating the note. If date is
+ * NULL, current date will be used instead.
  *
- * Note will be marked with status "U" which means it's "undone".
- * "D" means "done". With status P, note is marked as postponed.
+ * Note will be marked with status "U" which means it's "undone".  "D"
+ * means "done". With status P, note is marked as postponed.
  */
 static int add_note(char *content, const char *date)
 {
@@ -1491,26 +1499,28 @@ SYNOPSIS\n\
 \n\
 OPTIONS\n\
 \n\
-    -a <content> [yyyy-MM-dd]    Add a new note with optional date\n\
-    -d <id>                      Delete note by id\n\
-    -D                           Delete all notes\n\
-    -e <path>                    Export notes as html to a file\n\
-    -f <search>                  Find notes by search term\n\
-    -F <regex>                   Find notes by regular expression\n\
-    -l <n>                       Show latest n notes\n\
-    -m <id>                      Mark note status as done\n\
-    -M <id>                      Mark note status as undone\n\
-    -o                           Show all notes organized by date\n\
-    -p                           Show current memo file path\n\
-    -P [id]                      Show postponed or mark note as postponed\n\
-    -R                           Delete all notes marked as done\n\
-    -s                           Show all notes except postponed (Same as running memo)\n\
-    -T                           Mark all notes as done\n\
-    -u                           Show only undone notes\n\
+    -a <content> [yyyy-MM-dd]        Add a new note with optional date\n\
+    -d <id>                          Delete note by id\n\
+    -D                               Delete all notes\n\
+    -e <path>                        Export notes as html to a file\n\
+    -f <search>                      Find notes by search term\n\
+    -F <regex>                       Find notes by regular expression\n\
+    -l <n>                           Show latest n notes\n\
+    -m <id>                          Mark note status as done\n\
+    -M <id>                          Mark note status as undone\n\
+    -o                               Show all notes organized by date\n\
+    -p                               Show current memo file path\n\
+    -P [id]                          Show postponed or mark note as postponed\n\
+    -R                               Delete all notes marked as done\n\
+    -r <id> [content]/[yyyy-MM-dd]   Replace note content or date\n\
+    -s                               Show all notes except postponed\n\
+                                     (Same as simply running memo)\n\
+    -T                               Mark all notes as done\n\
+    -u                               Show only undone notes\n\
 \n\
-    -                            Read from stdin\n\
-    -h                           Show short help and exit. This page\n\
-    -V                           Show version number of program\n\
+    -                                Read from stdin\n\
+    -h                               Show short help and exit. This page\n\
+    -V                               Show version number of program\n\
 \n\
 For more information and examples see man memo(1).\n\
 \n\
@@ -1575,7 +1585,7 @@ int main(int argc, char *argv[])
 		show_notes(-1);
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:opPRsTuV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:opPr:RsTuV")) != -1){
 		has_valid_options = 1;
 
 		switch(c) {
@@ -1627,6 +1637,9 @@ int main(int argc, char *argv[])
 				mark_note_status(POSTPONED, atoi(argv[optind]));
 			else
 				show_notes(POSTPONED);
+			break;
+		case 'r':
+			
 			break;
 		case 'R':
 			mark_note_status(DELETE_DONE, -1);
