@@ -70,6 +70,16 @@ typedef enum {
 } NoteStatus_t;
 
 
+/* NOTE_STATUS part is handled by NoteStatus_t
+ * in function mark_note_status.
+ */
+typedef enum {
+	NOTE_DATE = 1,
+	NOTE_CONTENT = 2
+
+} NotePart_t;
+
+
 /* Function declarations */
 static char *read_file_line(FILE *fp);
 static char *get_memo_file_path();
@@ -77,7 +87,7 @@ static char *get_memo_default_path();
 static char *get_memo_conf_path();
 static char *get_temp_memo_path();
 static char *get_memo_conf_value(const char *prop);
-static int   is_valid_date_format(const char *date);
+static int   is_valid_date_format(const char *date, int silent_errors);
 static int   file_exists(const char *path);
 static void  remove_content_newlines(char *content);
 static int   add_note(char *content, const char *date);
@@ -87,6 +97,7 @@ static int   delete_note(int id);
 static int   show_notes(NoteStatus_t status);
 static int   show_notes_tree();
 static int   count_file_lines(FILE *fp);
+static char  *note_part_replace(NotePart_t part, char *note_line, const char *data);
 static int   search_notes(const char *search);
 static int   search_regexp(const char *regexp);
 static const char *export_html(const char *path);
@@ -96,6 +107,7 @@ static void  output_postponed(char *line);
 static void  output_without_date(char *line);
 static void  show_latest(int count);
 static FILE *get_memo_file_ptr();
+static FILE *get_memo_tmpfile_ptr();
 static void  usage();
 static void  fail(FILE *out, const char *fmt, ...);
 static int   delete_all();
@@ -114,9 +126,12 @@ static void  mark_as_postponed(FILE *fp, char *line);
 /* Check if given date is in valid date format.
  * Memo assumes the date format to be yyyy-MM-dd.
  *
+ * If silent_errors is 1, no error information will be outputted.
+ * When silent_errors != 1, error information is outputted to stderr.
+ *
  * Functions returns 0 on success and -1 on failure.
  */
-static int is_valid_date_format(const char *date)
+static int is_valid_date_format(const char *date, int silent_errors)
 {
 	int d;
 	int m;
@@ -130,7 +145,9 @@ static int is_valid_date_format(const char *date)
 	ret = sscanf(date, "%04d-%02d-%02d", &y, &m, &d);
 
 	if (ret != 3) {
-		fail(stderr,"%s: invalid date format\n", __func__);
+		if ( !silent_errors)
+			fail(stderr,"%s: invalid date format\n", __func__);
+
 		return -1;
 	}
 
@@ -139,15 +156,20 @@ static int is_valid_date_format(const char *date)
 		day_count[1] = 29;
 
 	if (m < 13 && m > 0) {
-		if (d <= day_count[m - 1])
+		if (d <= day_count[m - 1]) {
 			return 0;
-		else
-			fail(stderr, "%s: invalid day\n", __func__);
+		}
+		else {
+			if (!silent_errors)
+				fail(stderr, "%s: invalid day\n", __func__);
+		}
 	} else {
-		fail(stderr, "%s: invalid month\n", __func__);
+		if (!silent_errors)
+			fail(stderr, "%s: invalid month\n", __func__);
 	}
 
-	fail(stderr, "%s: parsing date failed\n", __func__);
+	if (!silent_errors)
+		fail(stderr, "%s: parsing date failed\n", __func__);
 
 	return -1;
 }
@@ -229,6 +251,38 @@ static void fail(FILE *out, const char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(out, fmt, ap);
 	va_end(ap);
+}
+
+
+/* Get a FILE descriptor for temp file.
+ * Caller is responsible for closing the
+ * file pointer.
+ *
+ * Return NULL on failure.
+ */
+static FILE *get_memo_tmpfile_ptr()
+{
+	FILE *fp = NULL;
+	char *tmp = NULL;
+
+	tmp = get_temp_memo_path();
+
+	if (tmp == NULL) {
+		fail(stderr, "%s: error getting a temp file\n", __func__);
+		return NULL;
+	}
+
+	fp = fopen(tmp, "w");
+
+	if (fp == NULL) {
+		fail(stderr, "%s: error opening temp file\n", __func__);
+		free(tmp);
+		return NULL;
+	}
+
+	free(tmp);
+
+	return fp;
 }
 
 
@@ -1409,6 +1463,88 @@ static void remove_content_newlines(char *content)
 }
 
 
+/* Replaces part of the note.
+ * data is the new part defined by NotePart_t.
+ *
+ * Original note line is modified.
+ *
+ * Caller is responsible for freeing the return value.
+ * Returns new note line on success, NULL on failure.
+ */
+static char *note_part_replace(NotePart_t part, char *note_line, const char *data)
+{
+	char *new_line = NULL;
+	int size = ((strlen(note_line) + strlen(data)) + 1) * sizeof(char);
+
+	new_line = (char*)malloc(size);
+
+	if (new_line == NULL) {
+		fail(stderr, "%s: malloc failed\n", __func__);
+		return NULL;
+	}
+
+	char *token = NULL;
+
+	/* Get the id and copy it */
+	if ((token = strtok(note_line, "\t")) != NULL) {
+		if (sprintf(new_line, "%s\t", token) < 0)
+			goto error_clean_up;
+	}
+	else {
+		goto error_clean_up;
+	}
+
+	/* Get the status code and copy it */ 
+	if ((token = strtok(NULL, "\t")) != NULL) {
+		if (sprintf(new_line + strlen(new_line), "%s\t", token) < 0)
+			goto error_clean_up;
+	}
+	else {
+		goto error_clean_up;
+	}
+
+	/* Get the original date */
+	if ( (token = strtok(NULL, "\t")) == NULL)
+		goto error_clean_up;
+
+	if (part == NOTE_DATE) {
+		/* Copy data as the new date */
+		if (sprintf(new_line + strlen(new_line), "%s\t", data) < 0)
+			goto error_clean_up;
+			
+
+	} else {
+		/* Copy the original date */
+		if (sprintf(new_line + strlen(new_line), "%s\t", token) < 0)
+			goto error_clean_up;
+	}
+
+	/* Get the original note content */
+	if ( (token = strtok(NULL, "\t")) == NULL)
+		goto error_clean_up;
+
+	if (part == NOTE_CONTENT) {
+		/* Copy the data as new content */
+		if (sprintf(new_line + strlen(new_line), "%s", data) < 0)
+			goto error_clean_up;
+	} else {
+		/* Copy the original note content, do not write \n because
+		 * the token has it already.
+		 */
+		if (sprintf(new_line + strlen(new_line), "%s", token) < 0)
+			goto error_clean_up;
+	}
+
+	return new_line;
+
+error_clean_up:
+	fail(stderr, "%s: replacing note data failed\n", __func__);
+	free(new_line);
+			
+	return NULL;
+}
+
+
 /* Function replaces a note content with data.
  *
  * Data can be either a valid date or content.  Replace operation is
@@ -1421,8 +1557,131 @@ static void remove_content_newlines(char *content)
  */
 static int replace_note(int id, const char *data)
 {
+	FILE *tmpfp = NULL;
+	FILE *fp = NULL;
+	char *memofile = NULL;
+	char *tmpfile = NULL;
+	int lines = 0;
 
+	tmpfp = get_memo_tmpfile_ptr();
 
+	if (tmpfp == NULL)
+		return -1;
+
+	fp = get_memo_file_ptr("r");
+
+	lines = count_file_lines(fp);
+
+	if (lines == -1) {
+		fail(stderr, "%s: counting lines failed\n", __func__);
+		fclose(tmpfp);
+
+		return -1;
+	}
+
+	/* Empty file, ignore. */
+	if (lines == -2) {
+		fclose(fp);
+		fclose(tmpfp);
+
+		return -1;
+	}
+
+	memofile = get_memo_file_path();
+
+	if (memofile == NULL) {
+		fail(stderr, "%s failed to get memo file path\n", __func__);
+		fclose(fp);
+		fclose(tmpfp);
+
+		return -1;
+	}
+
+	tmpfile = get_temp_memo_path();
+	
+	if (tmpfile == NULL) {
+		fail(stderr, "%s failed to get memo tmp path\n", __func__);
+		fclose(fp);
+		fclose(tmpfp);
+
+		free(memofile);
+
+		return -1;
+	}
+
+	while (lines >= 0) {
+		char *line = read_file_line(fp);
+
+		if (line) {
+			char *endptr;
+			int curr_id = strtol(line, &endptr, 10);
+			if (curr_id == id) {
+				/* Found the note to be replaced 
+				 * Check if user wants to replace the date
+				 * by validating the data as date. Otherwise
+				 * assume content is being replaced.
+				 */
+				if (is_valid_date_format(data, 1) == 0) {
+					char *new_line = NULL;
+					new_line = note_part_replace(NOTE_DATE,
+								line, data);
+					if (new_line == NULL) {
+
+						printf("Unable to replace note %d\n", id);
+
+						free(memofile);
+						free(tmpfile);
+						fclose(fp);
+						fclose(tmpfp);
+
+						return -1;
+					}
+
+					fprintf(tmpfp, "%s\n", new_line);
+					free(new_line);
+					
+				} else {
+					char *new_line = NULL;
+					new_line = note_part_replace(NOTE_CONTENT,
+								line, data);
+
+					if (new_line == NULL) {
+
+						printf("Unable to replace note %d\n", id);
+
+						free(memofile);
+						free(tmpfile);
+						fclose(fp);
+						fclose(tmpfp);
+
+						return -1;
+					}
+
+					fprintf(tmpfp, "%s\n", new_line);
+					free(new_line);
+				}
+			} else {
+				fprintf(tmpfp, "%s\n", line);
+			}
+
+			free(line);
+		}
+
+		lines--;
+	}
+
+	if (file_exists(memofile))
+		remove(memofile);
+
+	rename(tmpfile, memofile);
+	remove(tmpfile);
+
+	free(memofile);
+	free(tmpfile);
+	fclose(fp);
+	fclose(tmpfp);
+
+	return 0;
 }
 
 
@@ -1592,7 +1851,7 @@ int main(int argc, char *argv[])
 	
 		case 'a':
 			if (argv[optind]) {
-				if (is_valid_date_format(argv[optind]) == 0)
+				if (is_valid_date_format(argv[optind], 0) == 0)
 					add_note(optarg, argv[optind]);
 			}
 			else {
@@ -1638,9 +1897,18 @@ int main(int argc, char *argv[])
 			else
 				show_notes(POSTPONED);
 			break;
-		case 'r':
-			
+		case 'r': {
+			int id = atoi(optarg);
+			if (argv[optind]) {
+				replace_note(id, argv[optind]);
+			}
+			else {
+				printf("Missing argument date or content, see -h\n");
+				free(path);
+				return 0;
+			}	
 			break;
+		}
 		case 'R':
 			mark_note_status(DELETE_DONE, -1);
 			break;
@@ -1673,6 +1941,8 @@ int main(int argc, char *argv[])
 				printf("-m missing an argument <id>\n");
 			else if(optopt == 'M')
 				printf("-M missing an argument <id>\n");
+			else if(optopt == 'r')
+				printf("-r missing an argument <id>\n");
 			else
 				printf("invalid option, see memo -h for help\n");
 			break;
