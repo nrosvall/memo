@@ -1,7 +1,7 @@
 .\" Manpage for memo.
 .\" Any errors or typos, contact niko@ideabyte.net.
 
-.TH man 1 "6 Nov 2014" "1.3" "memo man page"
+.TH man 1 "21 Nov 2014" "1.4" "memo man page"
 .SH NAME
 memo \- unix-style note-taking software
 .SH SYNOPSIS
@@ -23,6 +23,8 @@ Export notes as html to a file
 Find notes by text search
 .IP "-F <regex>"
 Find notes by regular expression
+.IP -i
+Add multiple notes from stdin
 .IP "-l <n>"
 Show latest n notes
 .IP "-m <id>"
@@ -37,10 +39,16 @@ Show current memo file path
 Show postponed or mark note as postponed
 .IP -R
 Delete all notes marked as done
+.IP "-r <id> [content]/[yyyy-MM-dd]"
+Replace note content or date
 .IP -s
-Show all notes except postponed
+Show all notes except postponed. Same as typing command memo
 .IP -T
 Mark all notes as done
+.IP -u
+Show only undone notes
+.IP -
+Read from stdin
 .IP -h
 Show short help and exit. This page
 .IP -V
@@ -59,10 +67,10 @@ Output:
        4    2014-10-10    Remember to buy milk
 .PP
 Replace record 4 with new text:
-       memo -d 4 -a "Remember to buy cheese"
+       memo -r 4 "Remember to buy cheese"
 .PP
 Add note from stdin:
-       echo "My new note" | memo
+       echo "My new note" | memo -
 .PP
 Mark note as postponed:
        memo -P 4
@@ -70,7 +78,7 @@ Mark note as postponed:
 Show postponed notes:
        memo -P
 .PP
-Postponed notes are not shown with -s. Postponed note
+Postponed notes are not shown by default. Postponed note
 can be marked as undone or done normally using -m or -M flag.
 Only undone notes can be postponed.
 .PP
