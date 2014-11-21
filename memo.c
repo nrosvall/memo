@@ -82,6 +82,7 @@ typedef enum {
 
 /* Function declarations */
 static char *read_file_line(FILE *fp);
+static int  add_notes_from_stdin();
 static char *get_memo_file_path();
 static char *get_memo_default_path();
 static char *get_memo_conf_path();
@@ -313,6 +314,65 @@ static FILE *get_memo_file_ptr(char *mode)
 
 	return fp;
 }
+
+
+/* Function reads multiple lines from stdin until
+ * the end of transmission (^D).
+ *
+ * Each line is assumed to be the content part of the note.
+ *
+ * Notes are added to the memo file. Returns -1 on failure, 0 on
+ * success.
+ */
+static int add_notes_from_stdin()
+{
+	/* First get the whole buffer from stdin. Then parse the buffer;
+	 * each note is separated by a new line character in the
+	 * buffer. Call add_note for each line.
+	 */
+
+	int length = 128;
+	char *buffer = NULL;
+	int count = 0;
+	char ch;
+	char *line = NULL;
+
+	if ((buffer = (char*)malloc(sizeof(char) * length)) == NULL) {
+		fail(stderr, "%s: malloc failed\n", __func__);
+		return -1;
+	}
+
+	ch = getc(stdin);
+
+	while (ch != EOF) {
+		if (count == length) {
+			length += 128;
+			if ((buffer = realloc(buffer, length)) == NULL) {
+				fail(stderr, "%s realloc failed\n", __func__);
+				return -1;
+			}
+		}
+
+		buffer[count] = ch;
+		count++;
+		ch = getc(stdin);
+	}
+
+	buffer[count] = '\0';
+	buffer = realloc(buffer, count + 1);
+
+	line = strtok(buffer, "\n");
+
+	while (line != NULL) {
+		add_note(line, NULL);
+		line = strtok(NULL, "\n");
+	}
+
+	free(buffer);
+
+	return 0;
+}
+
 
 /* Reads a line from source pointed by FILE*.
  *
@@ -1764,6 +1824,7 @@ OPTIONS\n\
     -e <path>                        Export notes as html to a file\n\
     -f <search>                      Find notes by search term\n\
     -F <regex>                       Find notes by regular expression\n\
+    -i                               Read from stdin until ^D\n\
     -l <n>                           Show latest n notes\n\
     -m <id>                          Mark note status as done\n\
     -M <id>                          Mark note status as undone\n\
@@ -1844,7 +1905,7 @@ int main(int argc, char *argv[])
 		show_notes(-1);
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hl:m:M:opPr:RsTuV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hil:m:M:opPr:RsTuV")) != -1){
 		has_valid_options = 1;
 
 		switch(c) {
@@ -1875,6 +1936,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'h':
 			usage();
+			break;
+		case 'i':
+			add_notes_from_stdin();
 			break;
 		case 'o':
 			show_notes_tree();
