@@ -121,7 +121,7 @@ static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
 
 
-#define VERSION 1.3
+#define VERSION 1.4
 
 
 /* Check if given date is in valid date format.

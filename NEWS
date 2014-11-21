@@ -1,3 +1,33 @@
+1.4: 2014-11-21
+	Version 1.4 released.
+
+	Version 1.4 implements new features as well as portability
+	fixes.
+
+	Memo can now replace existing note without touching the id of
+	the note. Note replace functionality is behind -r flag.
+
+	It's now possible to add multiple notes at once using -i flag.
+	When flag -i is used Memo reads notes from stdin until the 
+	end of transmission (^D).
+
+	Memo can now show only undone notes with flag -u.
+
+	Flag -s is now depracated. Same functionality is available by
+	simply typing "memo".
+
+	Adding a note from stdin is now behind flag - instead of just
+	command "memo". This change was made since it's more logical
+	to show the notes when user types "memo" than assume input from
+	stdin. Besides flag - is pretty standard for reading from stdin.
+
+	This version also includes various portability fixes for Windows
+	and Mac OS X operating systems.
+
+	Thanks for Mikael Berthe for new ideas, Aaron Massey for Mac OS X
+	related fixes and Mattn for Windows related changes. Thanks also
+	for other contributors I possibly forgot to mention.
+
 1.3: 2014-11-06
 	Version 1.3 released.
 
