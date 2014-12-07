@@ -102,6 +102,7 @@ static char  *note_part_replace(NotePart_t part, char *note_line, const char *da
 static int   search_notes(const char *search);
 static int   search_regexp(const char *regexp);
 static const char *export_html(const char *path);
+static const char *export_csv(const char *path);
 static void  output_default(char *line);
 static void  output_undone(char *line);
 static void  output_postponed(char *line);
@@ -1122,7 +1123,7 @@ static const char *export_html(const char *path)
 		return NULL;
 	}
 
-	fprintf(fp,"<!DOCTYPE html>\n");
+	fprintf(fp, "<!DOCTYPE html>\n");
 	fprintf(fp, "<html>\n<head>\n");
 	fprintf(fp, "<meta charset=\"UTF-8\">\n");
 	fprintf(fp, "<title>Memo notes</title>\n");
@@ -1144,6 +1145,68 @@ static const char *export_html(const char *path)
 	}
 
 	fprintf(fp, "</table>\n</body>\n</html>\n");
+	fclose(fp);
+	fclose(fpm);
+
+	return path;
+}
+
+
+/* Exports notes as CSV.
+ *
+ * id,status,date,content
+ * 1,U,2013-11-11,some note
+ *
+ * Function returns the path to the CSV file or NULL on failure.
+ */
+static const char *export_csv(const char *path)
+{
+	FILE *fp = NULL;
+	FILE *fpm = NULL;
+	char *line = NULL;
+	int lines = 0;
+
+	fp = fopen(path, "w");
+
+	if(!fp) {
+		fail(stderr, "%s failed to open %s\n", __func__, path);
+		return NULL;
+	}
+
+	fpm = get_memo_file_ptr("r");
+	lines = count_file_lines(fpm);
+
+	if(lines == -1) {
+		fail(stderr, "%s: counting lines failed\n", __func__);
+		return NULL;
+	}
+
+	/* Ignore empty file and return */
+	if(lines == -2) {
+		printf("Nothing to export.\n");
+		return NULL;
+	}
+
+	fprintf(fp, "ID,Status,Date,Content\n");
+
+	while (lines >= 0) {
+		line = read_file_line(fpm);
+		if (line) {
+			/* Replace each occurence of tab character 
+			 * with a comma. 
+			 */
+			for (int i = 0; i < strlen(line); i++) {
+				if (line[i] == '\t')
+					line[i] = ',';
+			}
+
+			fprintf(fp, "%s\n", line);
+			free(line);
+		}
+
+		lines--;
+	}
+
 	fclose(fp);
 	fclose(fpm);
 
@@ -1821,7 +1884,8 @@ OPTIONS\n\
     -a <content> [yyyy-MM-dd]        Add a new note with optional date\n\
     -d <id>                          Delete note by id\n\
     -D                               Delete all notes\n\
-    -e <path>                        Export notes as html to a file\n\
+    -e <format> <path>               Export notes a file\n\
+                                     Format must be either csv or html\n\
     -f <search>                      Find notes by search term\n\
     -F <regex>                       Find notes by regular expression\n\
     -i                               Read from stdin until ^D\n\
@@ -1926,7 +1990,13 @@ int main(int argc, char *argv[])
 			delete_all();
 			break;
 		case 'e':
-			export_html(optarg);
+			if (argv[optind]) {
+				if (strcmp(optarg, "csv") == 0) {
+					export_csv(argv[optind]);
+				} else if(strcmp(optarg, "html") == 0) {
+					export_html(argv[optind]);
+				}
+			}
 			break;
 		case 'f':
 			search_notes(optarg);
