@@ -26,8 +26,7 @@
  *
  * If you port Memo for another platform, please let me know,
  * no reason for that other than it's nice to know where Memo runs.
- * Memo should be fairly portable for POSIX systems. I don't know
- * about Windows...uninstd.h is not natively available for it(?).
+ * Memo should be fairly portable for POSIX systems.
  */
 
 /* To enable _POSIX_C_SOURCE feature test macro */
