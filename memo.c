@@ -108,7 +108,7 @@ static void  output_undone(char *line);
 static void  output_postponed(char *line);
 static void  output_without_date(char *line);
 static void  show_latest(int count);
-static FILE *get_memo_file_ptr();
+static FILE *get_memo_file_ptr(char *mode);
 static FILE *get_memo_tmpfile_ptr();
 static void  usage();
 static void  fail(FILE *out, const char *fmt, ...);
