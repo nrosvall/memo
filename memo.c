@@ -237,11 +237,8 @@ static int count_file_lines(FILE *fp)
         /* return the count, ignoring the last empty line */
 	if (count == 0)
 		return -2;
-	else
+
 	return count - 1;
-
-
-	//return count;
 }
 
 
