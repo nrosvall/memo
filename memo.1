@@ -96,6 +96,14 @@ Since version 1.3 -D option asks for confirmation before deleting all
 notes. It's possible to disable this confirmation via ~/.memorc
 property. To disable the confirmation add MEMO_CONFIRM_DELETE=no to
 ~/.memorc file.
+.SH BUGS
+Not strictly a bug, but on some terminals with Bash you can't use
+exclamation mark if Bash history expand feature is enabled. For example:
+memo -a "This is a test note!" 2014-12-20 would fail. Some terminal
+emulators workaround this (Gnome Terminal for example). You might want
+to disable Bash history expand if you don't use it by putting set +H to
+your ~/.bashrc. Please note, that this is not a bug in Memo, or in
+Bash. It's a feature of Bash.
 .SH FILES
 .I $HOME/.memo
 .I $HOME/.memorc
