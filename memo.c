@@ -222,7 +222,7 @@ static int count_file_lines(FILE *fp)
 		return -1;
 	}
 
-        /* Count lines by new line characters */
+	/* Count lines by new line characters */
 	while (!feof(fp)) {
 		ch = fgetc(fp);
 
@@ -231,10 +231,10 @@ static int count_file_lines(FILE *fp)
 	}
 
 
-        /* Go to beginning of the file */
+	/* Go to beginning of the file */
 	rewind(fp);
 
-        /* return the count, ignoring the last empty line */
+	/* return the count, ignoring the last empty line */
 	if (count == 0)
 		return -2;
 
@@ -400,8 +400,8 @@ static char *read_file_line(FILE *fp)
 	char ch = getc(fp);
 
        /* Read char by char until the end of the line.
-        * and allocate memory as needed.
-        */
+	* and allocate memory as needed.
+	*/
 	while ((ch != '\n') && (ch != EOF)) {
 		if (count == length) {
 			length += 128;
@@ -463,7 +463,7 @@ static int get_next_id()
 			id = strtol(line, &endptr, 10);
 			free(line);
 			break;
-	        }
+		}
 
 		current++;
 
@@ -503,6 +503,7 @@ static int show_notes(NoteStatus_t status)
 
 	/* Ignore empty note file and exit */
 	if (lines == -2) {
+		fail(stderr,"You don't have any notes currently.\n", __func__);
 		fclose(fp);
 		return -1;
 	}
@@ -531,7 +532,7 @@ static int show_notes(NoteStatus_t status)
 
 /* Function returns the date string of the note.
  *
- * On success caller must free the return value. 
+ * On success caller must free the return value.
  * NULL is returned on failure.
  */
 static char *get_note_date(char *line)
@@ -553,7 +554,7 @@ static char *get_note_date(char *line)
 	}
 
 	date = (char*)malloc((strlen(datetoken) + 1) * sizeof(char));
-	
+
 	if (date == NULL) {
 		free(tmpline);
 		return NULL;
@@ -620,7 +621,7 @@ static int show_notes_tree()
 
 	fp = get_memo_file_ptr("r");
 	lines = count_file_lines(fp);
-	
+
 	if (lines == -1) {
 		fail(stderr, "%s: counting lines failed\n", __func__);
 		return -1;
@@ -702,7 +703,7 @@ static int show_notes_tree()
 						fclose(fp);
 						return -1;
 					}
-				
+
 					if (strcmp(date, dates[i]) == 0)
 						output_without_date(line);
 
@@ -1189,8 +1190,8 @@ static const char *export_csv(const char *path)
 	while (lines >= 0) {
 		line = read_file_line(fpm);
 		if (line) {
-			/* Replace each occurence of tab character 
-			 * with a comma. 
+			/* Replace each occurence of tab character
+			 * with a comma.
 			 */
 			for (int i = 0; i < strlen(line); i++) {
 				if (line[i] == '\t')
@@ -1283,8 +1284,8 @@ static int delete_all()
 		char ch = getc(stdin);
 		if (ch == 'y' || ch == 'Y') {
 			if (remove(path) != 0) {
-				fail(stderr, 
-					"%s error removing %s\n", __func__, 
+				fail(stderr,
+					"%s error removing %s\n", __func__,
 					path);
 			}
 		}
@@ -1404,7 +1405,7 @@ static char *get_memo_conf_value(const char *prop)
 					break;
 				}
 
-			        size_t len = strlen(token) + 1;
+				size_t len = strlen(token) + 1;
 				retval = (char*)malloc(len * sizeof(char));
 
 				if (retval == NULL) {
@@ -1435,7 +1436,7 @@ static char *get_memo_conf_value(const char *prop)
 
 
 /* Returns the default path. Default path is ~/.memo
- * 
+ *
  * Caller must free the return value. On failure NULL is returned.
  */
 static char *get_memo_default_path()
@@ -1516,7 +1517,7 @@ static char *get_memo_file_path()
 		/* Configuration file found, read .memo location
 		   from it */
 		path = get_memo_conf_value("MEMO_PATH");
-		
+
 		if (path == NULL) {
 			/* Failed to get the path. Most likely user did not
 			 * specify MEMO_PATH in the configuration file at all
@@ -1614,7 +1615,7 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 		goto error_clean_up;
 	}
 
-	/* Get the status code and copy it */ 
+	/* Get the status code and copy it */
 	if ((token = strtok(NULL, "\t")) != NULL) {
 		if (sprintf(new_line + strlen(new_line), "%s\t", token) < 0)
 			goto error_clean_up;
@@ -1631,7 +1632,7 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 		/* Copy data as the new date */
 		if (sprintf(new_line + strlen(new_line), "%s\t", data) < 0)
 			goto error_clean_up;
-			
+
 
 	} else {
 		/* Copy the original date */
@@ -1660,7 +1661,7 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 error_clean_up:
 	fail(stderr, "%s: replacing note data failed\n", __func__);
 	free(new_line);
-			
+
 	return NULL;
 }
 
@@ -1718,7 +1719,7 @@ static int replace_note(int id, const char *data)
 	}
 
 	tmpfile = get_temp_memo_path();
-	
+
 	if (tmpfile == NULL) {
 		fail(stderr, "%s failed to get memo tmp path\n", __func__);
 		fclose(fp);
@@ -1736,7 +1737,7 @@ static int replace_note(int id, const char *data)
 			char *endptr;
 			int curr_id = strtol(line, &endptr, 10);
 			if (curr_id == id) {
-				/* Found the note to be replaced 
+				/* Found the note to be replaced
 				 * Check if user wants to replace the date
 				 * by validating the data as date. Otherwise
 				 * assume content is being replaced.
@@ -1759,7 +1760,7 @@ static int replace_note(int id, const char *data)
 
 					fprintf(tmpfp, "%s\n", new_line);
 					free(new_line);
-					
+
 				} else {
 					char *new_line = NULL;
 					new_line = note_part_replace(NOTE_CONTENT,
@@ -1847,7 +1848,7 @@ static int add_note(char *content, const char *date)
 		id = 1;
 
 	if (date != NULL) {
-                /* Date is already validated, so just copy it
+		/* Date is already validated, so just copy it
 		 * for later use.
 		 */
 		strcpy(note_date, date);
@@ -1970,7 +1971,7 @@ int main(int argc, char *argv[])
 		has_valid_options = 1;
 
 		switch(c) {
-	
+
 		case 'a':
 			if (argv[optind]) {
 				if (is_valid_date_format(argv[optind], 0) == 0)
@@ -2016,9 +2017,9 @@ int main(int argc, char *argv[])
 		case 'm':
 			mark_note_status(DONE, atoi(optarg));
 			break;
-                case 'M':
-	                mark_note_status(UNDONE, atoi(optarg));
-	                break;
+		case 'M':
+			mark_note_status(UNDONE, atoi(optarg));
+			break;
 		case 'p':
 			show_memo_file_path();
 			break;
@@ -2037,7 +2038,7 @@ int main(int argc, char *argv[])
 				printf("Missing argument date or content, see -h\n");
 				free(path);
 				return 0;
-			}	
+			}
 			break;
 		}
 		case 'R':
