@@ -1,5 +1,5 @@
 CC=gcc
-override CFLAGS+=-std=c99 -Wall -Werror
+override CFLAGS+=-std=c99 -Wall
 PREFIX=/usr/local
 LDFLAGS=
 
