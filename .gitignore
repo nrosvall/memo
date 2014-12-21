@@ -1,4 +1,5 @@
 memo
 *.o
+*.out
 memo.1.gz
 memo-cron-reminder.sh
