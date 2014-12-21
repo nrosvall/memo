@@ -119,7 +119,7 @@ static void  note_status_replace(char *line, char new, char old);
 static void  mark_as_done(FILE *fp, char *line);
 static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
-
+static int  mark_old_as_done();
 
 #define VERSION 1.4
 
@@ -1054,6 +1054,21 @@ static int mark_note_status(NoteStatus_t status, int id)
 
 	free(memofile);
 	free(tmp);
+
+	return 0;
+}
+
+
+/* Function reads ~/.memorc for MARK_AS_DONE property
+ * and marks all notes older than the property value as DONE.
+ *
+ * For example if you have MARK_AS_DONE=2014-12-13, this function
+ * will mark all notes older than 2014-12-13 as DONE.
+ *
+ * Returns count of marked notes on success, -1 on failure.
+ */
+static int mark_old_as_done()
+{
 
 	return 0;
 }
