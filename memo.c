@@ -566,6 +566,7 @@ static char *get_note_date(char *line)
 }
 
 
+/* Functions outputs one note line without the date part */
 static void output_without_date(char *line)
 {
 	char *token = strtok(line, "\t");
@@ -1299,6 +1300,7 @@ static int delete_all()
 
 
 /* Delete a note by id.
+ *
  * Returns 0 on success and -1 on failure.
  */
 static int delete_note(int id)
@@ -1915,6 +1917,9 @@ AUTHORS\n\
 }
 
 
+/* Function outputs currently used memo file path
+ * to stdin.
+ */
 static void show_memo_file_path()
 {
 	char *path = NULL;
