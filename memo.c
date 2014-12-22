@@ -1073,7 +1073,7 @@ static int mark_old_as_done()
 	char *conf_path = NULL;
 	FILE *fp;
 	char *date = NULL;
-	struct tm dc;
+	struct tm dc = {0};
 	time_t date_to_compare;
 	int lines = 0;
 
@@ -1136,13 +1136,14 @@ static int mark_old_as_done()
 			char *curr_date = get_note_date(line);
 
 			if (curr_date == NULL) {
+				free(line);
 				free(date);
 				free(conf_path);
 				fclose(fp);
 			}
 			
 			time_t note_time;
-			struct tm nt;
+			struct tm nt = {0};
 
 			strptime(curr_date, "%Y-%m-%d", &nt);
 			note_time = mktime(&nt);
@@ -1157,6 +1158,8 @@ static int mark_old_as_done()
 		
 			free(curr_date);
 		}
+
+		free(line);
 
 		lines--;
 	}
