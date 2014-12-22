@@ -1070,7 +1070,107 @@ static int mark_note_status(NoteStatus_t status, int id)
  */
 static int mark_old_as_done()
 {
+	char *conf_path = NULL;
+	FILE *fp;
+	char *date = NULL;
+	struct tm dc;
+	time_t date_to_compare;
+	int lines = 0;
 
+	conf_path = get_memo_conf_path();
+
+	if (conf_path == NULL)
+		return -1;
+
+	if (!file_exists(conf_path)) {
+
+		free(conf_path);
+
+		return -1;
+	}
+
+	date = get_memo_conf_value("MARK_AS_DONE");
+	
+	if (is_valid_date_format(date, 0) == -1) {
+
+		fail(stderr, "%s: error in ~/.memorc parsing\n", __func__);
+		free(date);
+		free(conf_path);
+		
+		return -1;
+	}
+
+	fp = get_memo_file_ptr("r");
+	lines = count_file_lines(fp);
+
+	if (lines == -1) {
+
+		free(date);
+		free(conf_path);
+
+		if (lines == -2)
+			fclose(fp);
+		
+		return -1;
+	}
+
+	int id_array[lines];
+	int id_count = 0;
+	
+	/* Convert MARK_AS_DONE property value string
+	 * to a valid date */
+	strptime(date, "%Y-%m-%d", &dc);
+	date_to_compare = mktime(&dc);
+
+	/* Compare each note line date with the one read
+	 * from the ~/.memorc and store note id for later use
+	 * if note date is older
+	 */
+	while (lines >= 0) {
+		char *line = read_file_line(fp);
+
+		if (line) {
+
+			char *endptr;
+			int id = strtol(line, &endptr, 10);
+			char *curr_date = get_note_date(line);
+
+			if (curr_date == NULL) {
+				free(date);
+				free(conf_path);
+				fclose(fp);
+			}
+			
+			time_t note_time;
+			struct tm nt;
+
+			strptime(curr_date, "%Y-%m-%d", &nt);
+			note_time = mktime(&nt);
+
+			/* Store id codes of notes we want to mark as done
+			 * as we can't modify the file while we're reading it
+			 */
+			if (difftime(date_to_compare, note_time) > 0) {
+				id_array[id_count] = id;
+				id_count++;
+			}
+		
+			free(curr_date);
+		}
+
+		lines--;
+	}
+
+	free(date);
+	free(conf_path);
+	fclose(fp);
+
+	/* Loop through all the note id codes and mark corresponding
+	 * notes as DONE
+	 */	
+	for (int i = 0; i < id_count; i++)
+		mark_note_status(DONE, id_array[i]);
+	
 	return 0;
 }
 
@@ -1523,7 +1623,6 @@ static char *get_memo_file_path()
 
 	if (conf_path == NULL)
 		return NULL;
-
 
 	if (!file_exists(conf_path)) {
 		/* Config file not found, so fallback to ~/.memo */
@@ -1981,6 +2080,11 @@ int main(int argc, char *argv[])
 
 	opterr = 0;
 
+	/* This function is applied only if there's MARK_AS_DONE
+	 * property available in ~/.memorc
+	 */
+	mark_old_as_done();
+	
 	if (argc == 1) {
 		/* No arguments given, so just show notes */
 		show_notes(-1);
