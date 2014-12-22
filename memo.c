@@ -1071,7 +1071,7 @@ static int mark_note_status(NoteStatus_t status, int id)
 static int mark_old_as_done()
 {
 #ifdef _WIN32
-	return -1:
+	return -1;
 #endif
 	char *conf_path = NULL;
 	FILE *fp;
