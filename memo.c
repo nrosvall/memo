@@ -1457,7 +1457,12 @@ static char *get_memo_conf_path()
 	}
 
 	strcpy(conf_path, env);
+
+#ifdef _WIN32
+	strcat(conf_path, "/_memorc");
+#else
 	strcat(conf_path, "/.memorc");
+#endif
 
 	return conf_path;
 }
@@ -1582,7 +1587,11 @@ static char *get_memo_default_path()
 	}
 
 	strcpy(path, env);
+#ifdef _WIN32
+	strcat(path, "/_memo");
+#else
 	strcat(path, "/.memo");
+#endif
 
 	return path;
 }
