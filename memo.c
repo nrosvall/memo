@@ -1920,6 +1920,9 @@ static int replace_note(int id, const char *data)
 		lines--;
 	}
 
+	fclose(fp);
+	fclose(tmpfp);
+	
 	if (file_exists(memofile))
 		remove(memofile);
 
@@ -1928,8 +1931,6 @@ static int replace_note(int id, const char *data)
 
 	free(memofile);
 	free(tmpfile);
-	fclose(fp);
-	fclose(tmpfp);
 
 	return 0;
 }
