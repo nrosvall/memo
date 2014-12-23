@@ -121,7 +121,7 @@ static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
 static int  mark_old_as_done();
 
-#define VERSION 1.4
+#define VERSION 1.5
 
 
 /* Check if given date is in valid date format.
@@ -327,7 +327,6 @@ static int add_notes_from_stdin()
 	 * each note is separated by a new line character in the
 	 * buffer. Call add_note for each line.
 	 */
-
 	int length = 128;
 	char *buffer = NULL;
 	int count = 0;
