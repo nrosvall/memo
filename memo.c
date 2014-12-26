@@ -119,7 +119,8 @@ static void  note_status_replace(char *line, char new, char old);
 static void  mark_as_done(FILE *fp, char *line);
 static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
-static int  mark_old_as_done();
+static int   mark_old_as_done();
+static int   organize_note_identifiers();
 
 #define VERSION 1.5
 
@@ -427,7 +428,7 @@ static char *read_file_line(FILE *fp)
 
 /* Simply read all the lines from the .memo file
  * and return the id of the last line plus one.
- * If the file is missing or is empty, return 0
+ * If the file is missing or is empty, return 1
  * On error, returns -1
  */
 static int get_next_id()
@@ -1092,6 +1093,11 @@ static int mark_old_as_done()
 	}
 
 	date = get_memo_conf_value("MARK_AS_DONE");
+
+	if (date == NULL) {
+		free(conf_path);
+		return -1;
+	}
 	
 	if (is_valid_date_format(date, 0) == -1) {
 
@@ -1936,6 +1942,25 @@ static int replace_note(int id, const char *data)
 }
 
 
+/* Function organizes note id codes.
+ *
+ * In Memo, if you have notes with id codes 1,2,3 and user deletes note
+ * 2, remaining notes will be 1 and 3. This function organizes those
+ * id codes so that the codes would be 1 and 2. The reason why Memo does
+ * not do this automatically is because one might want to be able
+ * to trust that the id codes never change (for example if Memo is used
+ * as a part of some script)
+ *
+ * Returns 0 on success, -1 on failure.
+ */ 
+static int organize_note_identifiers()
+{
+
+
+	return 0;
+}
+
+
 /* .memo file format is following:
  *
  * id     status     date           content
@@ -2021,6 +2046,7 @@ OPTIONS\n\
     -m <id>                          Mark note status as done\n\
     -M <id>                          Mark note status as undone\n\
     -o                               Show all notes organized by date\n\
+    -O                               Organize note id codes\n\
     -p                               Show current memo file path\n\
     -P [id]                          Show postponed or mark note as postponed\n\
     -R                               Delete all notes marked as done\n\
@@ -2073,6 +2099,7 @@ int main(int argc, char *argv[])
 	int c;
 	char *stdinline = NULL;
 	int has_valid_options = 0;
+	int organize_note_ids = 0;
 
 	path = get_memo_file_path();
 
@@ -2105,7 +2132,7 @@ int main(int argc, char *argv[])
 		show_notes(-1);
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hil:m:M:opPr:RsTuV")) != -1){
+	while ((c = getopt(argc, argv, "a:d:De:f:F:hil:m:M:oOpPr:RsTuV")) != -1){
 		has_valid_options = 1;
 
 		switch(c) {
@@ -2148,6 +2175,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'o':
 			show_notes_tree();
+			break;
+		case 'O':
+			organize_note_ids = 1;
 			break;
 		case 'l':
 			show_latest(atoi(optarg));
@@ -2218,6 +2248,9 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
+
+	if (organize_note_ids)
+		organize_note_identifiers();
 
 	/* Handle argument '-' to read line from stdin */
 	if (argc > 1 && *argv[argc - 1] == '-' && strlen(argv[argc - 1]) == 1) {
