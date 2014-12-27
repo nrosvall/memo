@@ -93,6 +93,8 @@ static void  remove_content_newlines(char *content);
 static int   add_note(char *content, const char *date);
 static int   replace_note(int id, const char *data);
 static int   get_next_id();
+static char *get_note_date(char *line);
+static int   get_note_id_from_line(const char *line);
 static int   delete_note(int id);
 static int   show_notes(NoteStatus_t status);
 static int   show_notes_tree();
@@ -458,8 +460,7 @@ static int get_next_id()
 
 		/* Check if we're at the last line */
 		if (line && current == lines) {
-			char *endptr;
-			id = strtol(line, &endptr, 10);
+			id = get_note_id_from_line(line);
 			free(line);
 			break;
 		}
@@ -933,6 +934,17 @@ static void mark_as_postponed(FILE *fp, char *line)
 	}
 }
 
+/* Returns hte id of the short note. On failure, returns -1. */
+static int get_note_id_from_line(const char *line)
+{
+	int id = -1;
+	
+	char *endptr;
+	id = strtol(line, &endptr, 10);
+
+	return id;
+}
+
 
 /* Mark note by status U is undone, D is done or P postponed. When
  * status is DELETE, the note with a matching id will be deleted.
@@ -994,8 +1006,8 @@ static int mark_note_status(NoteStatus_t status, int id)
 		line = read_file_line(fp);
 
 		if (line) {
-			char *endptr;
-			int curr = strtol(line, &endptr, 10);
+
+			int curr = get_note_id_from_line(line);
 
 			switch(status) {
 
@@ -1139,8 +1151,7 @@ static int mark_old_as_done()
 
 		if (line) {
 
-			char *endptr;
-			int id = strtol(line, &endptr, 10);
+			int id = get_note_id_from_line(line);
 			char *curr_date = get_note_date(line);
 
 			if (curr_date == NULL) {
@@ -1869,8 +1880,8 @@ static int replace_note(int id, const char *data)
 		char *line = read_file_line(fp);
 
 		if (line) {
-			char *endptr;
-			int curr_id = strtol(line, &endptr, 10);
+		       
+			int curr_id = get_note_id_from_line(line);
 			if (curr_id == id) {
 				/* Found the note to be replaced
 				 * Check if user wants to replace the date
