@@ -1,7 +1,7 @@
 .\" Manpage for memo.
 .\" Any errors or typos, contact niko@ideabyte.net.
 
-.TH man 1 "22 Dec 2014" "1.5" "memo man page"
+.TH man 1 "28 Dec 2014" "1.5" "memo man page"
 .SH NAME
 memo \- unix-style note-taking software
 .SH SYNOPSIS
@@ -33,6 +33,8 @@ Mark note status as done
 Mark note status as undone
 .IP -o
 Show all notes organized by date
+.IP -O
+Reorder and organize note id codes
 .IP -p
 Show current memo file path
 .IP "-P [id]"
@@ -102,9 +104,7 @@ $HOME/.memorc. The property takes a valid date as a value. For example:
 MARK_AS_DONE=2014-12-23. If the property is set Memo will mark all notes
 older than the property value as done automatically.
 .SH NOTES
-In $HOME/.memorc file must end with a new line.
-.SH BUGS
-Not strictly a bug, but on some terminals with Bash you can't use
+On some terminal emulators with Bash you can't use
 exclamation mark if Bash history expand feature is enabled. For example:
 memo -a "This is a test note!" 2014-12-20 would fail. Some terminal
 emulators workaround this (Gnome Terminal for example). You might want

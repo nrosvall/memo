@@ -21,6 +21,9 @@ How to install Memo from source code
 	Compile command (assuming GCC is the C compiler in use): 
 	gcc -o memo memo.c
 
+    If compiled natively on Windows MinGW is needed as well as Pcre
+    library for POSIX regular expression support.
+
 	To install memo binary: cp memo /usr/local/bin/
 	To install memo.1 manpage: 
 	   cp memo.1 /usr/local/share/man/man1/

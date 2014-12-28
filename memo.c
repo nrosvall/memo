@@ -1,6 +1,6 @@
 /* Memo is a Unix-style note-taking software.
  *
- * Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>
+ * Copyright (C) 2014-2015 Niko Rosvall <niko@ideabyte.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2194,7 +2194,7 @@ OPTIONS\n\
     -m <id>                          Mark note status as done\n\
     -M <id>                          Mark note status as undone\n\
     -o                               Show all notes organized by date\n\
-    -O                               Organize note id codes\n\
+    -O                               Reorder and organize note id codes\n\
     -p                               Show current memo file path\n\
     -P [id]                          Show postponed or mark note as postponed\n\
     -R                               Delete all notes marked as done\n\
@@ -2211,7 +2211,7 @@ OPTIONS\n\
 For more information and examples see man memo(1).\n\
 \n\
 AUTHORS\n\
-    Copyright (C) 2014 Niko Rosvall <niko@ideabyte.net>\n\
+    Copyright (C) 2014-2015 Niko Rosvall <niko@ideabyte.net>\n\
 \n\
     Released under license GPL-3+. For more information, see\n\
     http://www.gnu.org/licenses\n\

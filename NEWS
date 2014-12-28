@@ -1,3 +1,27 @@
+1.5: 2015-01-01
+    Version 1.5 released.
+    
+    Memo can now export notes to a CSV file.
+    
+    In ~/.memorc a property MARK_AS_DONE can be set. The property
+    takes a valid date(yyyy-MM-dd) as a value. When set Memo will 
+    automatically mark notes older than the date as done.
+    
+    New command line flag -O added. With -O Memo reorders note id
+    codes. For example if there's notes with id codes 1,4 and 5
+    they will become 1,2 and 3.
+    
+    On Windows Memo now uses _ as a file prefix instead of dot. So
+    On Windows .memorc is _memorc and .memo is _memo. However, Windows
+    is not officially supported. Use Cygwin instead if on Windows.
+    
+    This release includes multiple bug fixes and to avoid code duplication
+    several helper functions where added.
+    
+    As this version had increasing number of contributors I'm not going
+    to list all the people here. Thanks for all the contributors for bug fixes 
+    and feature suggestions.
+
 1.4: 2014-11-21
 	Version 1.4 released.
 
