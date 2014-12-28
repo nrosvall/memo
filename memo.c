@@ -74,8 +74,8 @@ typedef enum {
  */
 typedef enum {
 	NOTE_DATE = 1,
-	NOTE_CONTENT = 2
-
+	NOTE_CONTENT = 2,
+	NOTE_ID = 3
 } NotePart_t;
 
 
@@ -95,6 +95,7 @@ static int   replace_note(int id, const char *data);
 static int   get_next_id();
 static char *get_note_date(char *line);
 static int   get_note_id_from_line(const char *line);
+static char *integer_to_string(int id);
 static int   delete_note(int id);
 static int   show_notes(NoteStatus_t status);
 static int   show_notes_tree();
@@ -934,6 +935,7 @@ static void mark_as_postponed(FILE *fp, char *line)
 	}
 }
 
+
 /* Returns hte id of the short note. On failure, returns -1. */
 static int get_note_id_from_line(const char *line)
 {
@@ -1754,10 +1756,16 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 
 	/* Get the id and copy it */
 	if ((token = strtok(note_line, "\t")) != NULL) {
-		if (sprintf(new_line, "%s\t", token) < 0)
-			goto error_clean_up;
-	}
-	else {
+		if (part == NOTE_ID) {
+			/* Replace the original id with data */
+			if (sprintf(new_line, "%s\t", data) < 0)
+				goto error_clean_up;
+		} else {
+			/* Copy the original id */
+			if (sprintf(new_line, "%s\t", token) < 0)
+				goto error_clean_up;
+		}
+	} else {
 		goto error_clean_up;
 	}
 
@@ -1765,8 +1773,7 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 	if ((token = strtok(NULL, "\t")) != NULL) {
 		if (sprintf(new_line + strlen(new_line), "%s\t", token) < 0)
 			goto error_clean_up;
-	}
-	else {
+	} else {
 		goto error_clean_up;
 	}
 
@@ -1778,7 +1785,6 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 		/* Copy data as the new date */
 		if (sprintf(new_line + strlen(new_line), "%s\t", data) < 0)
 			goto error_clean_up;
-
 
 	} else {
 		/* Copy the original date */
@@ -1953,6 +1959,35 @@ static int replace_note(int id, const char *data)
 }
 
 
+/* Simple helper function to convert integer to string.
+ *
+ * Returns the integer as string, on failure returns NULL.
+ * Caller is responsible for freeing the return value.
+ */
+static char *integer_to_string(int id)
+{
+	char *buffer = NULL;
+
+	/* Really, this should be enough space to hold our integer
+	 * for the note id... 
+	 */
+	buffer = (char*)malloc(15 * sizeof(char));
+
+	if (buffer == NULL) {
+		fail(stderr, "%s: malloc failed\n", __func__);
+		return NULL;
+	}
+
+	if (snprintf(buffer, 15, "%d", id) < 0) {
+		fail(stderr, "%s: convert failed\n", __func__);
+		free(buffer);
+		return NULL;
+	}
+
+	return buffer;
+}
+
+
 /* Function organizes note id codes.
  *
  * In Memo, if you have notes with id codes 1,2,3 and user deletes note
@@ -1966,8 +2001,110 @@ static int replace_note(int id, const char *data)
  */ 
 static int organize_note_identifiers()
 {
+	FILE *tmpfp = NULL;
+	FILE *fp = NULL;
+	char *memofile = NULL;
+	char *tmpfile = NULL;
+	int lines = 0;
+	int id_counter = 1;
 
+	tmpfp = get_memo_tmpfile_ptr();
 
+	if (tmpfp == NULL)
+		return -1;
+
+	fp = get_memo_file_ptr("r");
+
+	lines = count_file_lines(fp);
+
+	if (lines == -1) {
+		fail(stderr, "%s: counting lines failed\n", __func__);
+		fclose(tmpfp);
+		return -1;
+	}
+
+	/* An empty memo file, ignore and exit */
+	if (lines == -2) {
+		fclose(fp);
+		fclose(tmpfp);
+		return -1;
+	}
+
+	memofile = get_memo_file_path();
+
+	if (memofile == NULL) {
+		fail(stderr, "%s failed to get memo file path\n", __func__);
+		fclose(fp);
+		fclose(tmpfp);
+		return -1;
+	}
+
+	tmpfile = get_temp_memo_path();
+
+	if (tmpfile == NULL) {
+		fail(stderr, "%s failed to get memo tmp path\n", __func__);
+		fclose(fp);
+		fclose(tmpfp);
+		free(memofile);
+		return -1;
+	}
+
+	while (lines >= 0) {
+
+		char *line = read_file_line(fp);
+
+		if (line) {
+
+			/* Replace each note id with the value
+			 * from id_counter which starts from one.
+			 * id_counter is increased for every line.
+			 */
+			char *new_line = NULL;
+			char *id = integer_to_string(id_counter);
+
+			if (id == NULL) {
+				fail(stderr, "%s: fatal error\n", __func__);
+				free(memofile);
+				free(tmpfile);
+				fclose(fp);
+				fclose(tmpfp);
+				return -1;
+			}
+			
+			new_line = note_part_replace(NOTE_ID, line, id);
+
+			if (new_line == NULL) {
+				fail(stderr, "%s: fatal error\n", __func__);
+				free(memofile);
+				free(tmpfile);
+				fclose(fp);
+				fclose(tmpfp);
+				return -1;
+			}
+			
+			fprintf(tmpfp, "%s\n", new_line);
+			id_counter++;
+
+			free(id);
+			free(new_line);
+			free(line);
+		}
+
+		lines--;
+	}
+
+	fclose(fp);
+	fclose(tmpfp);
+
+	if (file_exists(memofile))
+		remove(memofile);
+
+	rename(tmpfile, memofile);
+	remove(tmpfile);
+
+	free(memofile);
+	free(tmpfile);
+	
 	return 0;
 }
 
