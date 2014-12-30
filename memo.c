@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -101,7 +102,8 @@ static int   show_notes(NoteStatus_t status);
 static int   show_notes_tree();
 static int   count_file_lines(FILE *fp);
 static char  *note_part_replace(NotePart_t part, char *note_line, const char *data);
-static int   search_notes(const char *search);
+static char  *case_strstr(const char *str1, const char *str2);
+static int   search_notes(char *search);
 static int   search_regexp(const char *regexp);
 static const char *export_html(const char *path);
 static const char *export_csv(const char *path);
@@ -724,10 +726,65 @@ static int show_notes_tree()
 }
 
 
+/* Function works like strstr, but ignores the case.
+ * There's a function strcasestr, but it's nonstandard
+ * GNU extension, so let's not use that.
+ *
+ * Return value must be freed by the caller.
+ */
+static char *case_strstr(const char *str1, const char *str2)
+{
+	char *tmp1 = NULL;
+	char *tmp2 = NULL;
+	char *tmp3 = NULL;
+	char *retval = NULL;
+
+	tmp1 = strdup(str1);
+
+	if (tmp1 == NULL) {
+		fail(stderr, "%s: strdup failed\n", __func__);
+		return NULL;
+	}
+
+	tmp2 = strdup(str2);
+
+	if (tmp2 == NULL) {
+		free(tmp1);
+		fail(stderr, "%s: strdup failed\n", __func__);
+		return NULL;
+	}
+
+	for (int i = 0; i < strlen(tmp1); i++)
+		tmp1[i] = tolower(tmp1[i]);
+
+	for (int i = 0; i < strlen(tmp2); i++)
+		tmp2[i] = tolower(tmp2[i]);
+
+	tmp3 = strstr(tmp1, tmp2);
+
+	if (tmp3) {
+		retval = strdup(tmp3);
+		/* Sanity check
+		 * Inform the user that something went wrong
+		 * even the search term was found. Probably never happens.
+		 */
+		if (retval == NULL) {
+			fail(stderr,"%s: search term found, but strdup fails\n",
+				__func__);
+		}
+	}
+
+	free(tmp1);
+	free(tmp2);
+
+	return retval;
+}
+
+
 /* Search if a note contains the search term.
  * Returns the count of found notes or -1 if function fails.
  */
-static int search_notes(const char *search)
+static int search_notes(char *search)
 {
 	FILE *fp = NULL;
 	int count = 0;
@@ -753,14 +810,25 @@ static int search_notes(const char *search)
 		line = read_file_line(fp);
 
 		if (line) {
-			/* Check if the search term matches */
-			const char *tmp = line;
+			char *token = NULL;
+			token = strtok(search, " ");
+			/* Loop through each word in the search string
+			 * and see if any of the words can be found
+			 */
+			while (token != NULL) {
+				char *foundptr = case_strstr(line, token);
+		    
+				if (foundptr){
+					output_default(line);
+					count++;
+					free(foundptr);
+					/* found it, no point to continue */
+					break;
+				}
 
-			if ((strstr(tmp, search)) != NULL){
-				output_default(line);
-				count++;
+				token = strtok(NULL, " ");
 			}
-
+			
 			free(line);
 		}
 
