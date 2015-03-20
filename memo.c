@@ -107,10 +107,11 @@ static int   search_notes(char *search);
 static int   search_regexp(const char *regexp);
 static const char *export_html(const char *path);
 static const char *export_csv(const char *path);
-static void  output_default(char *line);
-static void  output_undone(char *line);
-static void  output_postponed(char *line);
-static void  output_without_date(char *line);
+static void  output(char *line, int is_odd_line);
+static void  output_default(char *line, int is_odd_line);
+static void  output_undone(char *line, int is_odd_line);
+static void  output_postponed(char *line, int is_odd_line);
+static void  output_without_date(char *line, int is_odd_line);
 static void  show_latest(int count);
 static FILE *get_memo_file_ptr(char *mode);
 static FILE *get_memo_tmpfile_ptr();
@@ -126,6 +127,9 @@ static void  mark_as_undone(FILE *fp, char *line);
 static void  mark_as_postponed(FILE *fp, char *line);
 static int   mark_old_as_done();
 static int   organize_note_identifiers();
+static char *get_line_color(int is_odd_line);
+static char *color_to_escape_seq(char *color);
+static int  not_odd(int n);
 
 #define VERSION 1.5
 
@@ -516,11 +520,11 @@ static int show_notes(NoteStatus_t status)
 
 		if (line) {
 			if (status == POSTPONED)
-				output_postponed(line);
+				output_postponed(line, not_odd(lines));
 			else if (status == UNDONE)
-				output_undone(line);
+				output_undone(line, not_odd(lines));
 			else
-				output_default(line);
+				output_default(line, not_odd(lines));
 			free(line);
 		}
 
@@ -568,39 +572,6 @@ static char *get_note_date(char *line)
 	free(tmpline);
 
 	return date;
-}
-
-
-/* Functions outputs one note line without the date part */
-static void output_without_date(char *line)
-{
-	char *token = strtok(line, "\t");
-
-	if (token != NULL)
-		printf("\t%s\t", token);
-	else
-		goto error;
-
-	token = strtok(NULL, "\t");
-
-	if (token != NULL)
-		printf("%s\t", token);
-	else
-		goto error;
-
-	token = strtok(NULL, "\t");
-	token = strtok(NULL, "\t");
-
-	if (token != NULL)
-		printf("%s\n", token);
-	else
-		goto error;
-
-	return;
-
-error:
-	fail(stderr, "%s parsing line failed\n", __func__);
-
 }
 
 
@@ -709,7 +680,7 @@ static int show_notes_tree()
 					}
 
 					if (strcmp(date, dates[i]) == 0)
-						output_without_date(line);
+						output_without_date(line, not_odd(i));
 
 					free(line);
 					free(date);
@@ -819,7 +790,7 @@ static int search_notes(char *search)
 				char *foundptr = case_strstr(line, token);
 		    
 				if (foundptr){
-					output_default(line);
+					output_default(line, not_odd(count));
 					count++;
 					free(foundptr);
 					/* found it, no point to continue */
@@ -883,7 +854,7 @@ static int search_regexp(const char *regexp)
 			ret = regexec(&regex, line, 0, NULL, 0);
 
 			if (ret == 0) {
-				output_default(line);
+				output_default(line, not_odd(count));
 				count++;
 			} else if (ret != 0 && ret != REG_NOMATCH) {
 				/* Something went wrong while executing
@@ -1267,34 +1238,197 @@ static int mark_old_as_done()
 }
 
 
+/* Function returns the corresponding terminal
+ * escape sequence of the color.
+ */
+static char *color_to_escape_seq(char *color)
+{
+	#define red "\033[0;31m"
+	#define cyan "\033[0;36m"
+	#define green "\033[0;32m"
+	#define blue "\033[0;34m"
+	#define black "\033[0;30m"
+	#define brown "\033[0;33m"
+	#define magenta "\033[0;35m"
+	#define gray "\033[0;37m"
+	#define none "\033[0m"
+
+	if (strcmp(color, "red") == 0)
+		return red;
+	else if (strcmp(color, "cyan") == 0)
+		return cyan;
+	else if (strcmp(color, "green") == 0)
+		return green;
+	else if (strcmp(color, "blue") == 0)
+		return blue;
+	else if (strcmp(color, "black") == 0)
+		return black;
+	else if (strcmp(color, "brown") == 0)
+		return brown;
+	else if (strcmp(color, "magenta") == 0)
+		return magenta;
+	else if (strcmp(color, "gray") == 0)
+		return gray;
+
+	return none;
+}
+
+
+/* Function returns 1 if n is an even number.
+ * 0 is returned if n is odd.
+ */
+static int not_odd(int n)
+{
+	if ( n % 2)
+		return 1;
+
+	return 0;
+}
+
+
+/* Returns the color value of LINE_COLOR or ODD_LINE_COLOR in .memorc.
+ * This function returns NULL if USE_COLORS is set to false.
+ *
+ * Use is_odd_line=0 to return the value of LINE_COLOR
+ * property. Use is_odd_line=1 to get the value of ODD_LINE_COLOR.
+ *
+ * If LINE_COLOR/ODD_LINE_COLOR is not set, but USE_COLORS is set to true
+ * function will return the default color for the line.
+ *
+ * Not supported on Windows, returns always NULL.
+ *
+ */
+static char *get_line_color(int is_odd_line)
+{
+
+#ifdef _WIN32
+	return NULL;
+#endif
+
+	char *usecolors = NULL;
+	char *color = NULL;
+	char *defaultclr = NULL;
+
+	/* Default LINE_COLOR/ODD_LINE_COLOR. */
+	defaultclr = "magenta";
+
+	if (is_odd_line)
+		defaultclr = "blue";
+
+	usecolors = get_memo_conf_value("USE_COLORS");
+
+	if (!usecolors)
+		return NULL;
+
+	if (strcmp(usecolors, "no") == 0) {
+		free(usecolors);
+		return NULL;
+	}
+
+	if (is_odd_line)
+		color = get_memo_conf_value("ODD_LINE_COLOR");
+	else
+		color = get_memo_conf_value("LINE_COLOR");
+
+	if (!color) {
+		color = (char*)malloc((strlen(defaultclr) + 1) * sizeof(char));
+		if (!color) {
+			fail(stderr, "%s malloc failed\n", __func__);
+			return NULL;
+		}
+
+		strcpy(color, defaultclr);
+	}
+	
+	char *value = color_to_escape_seq(color);
+	free(color);
+
+	return value;
+}
+
+static void output(char *line, int is_odd_line)
+{
+	char *color = NULL;
+
+	color = get_line_color(is_odd_line);
+
+	if (!color) {
+		printf("%s\n", line);
+	} else {
+		printf("%s%s\n", color, line);
+		/* Reset terminal colors */
+		printf("\033[0m");
+	}
+}
+
+
 /* This functions handles the output of one line.
  * Postponed notes are ignored.
+ *
+ * Set is_odd_line to 1 if the line to be outputted is odd.
  */
-static void output_default(char *line)
+static void output_default(char *line, int is_odd_line)
 {
 	if (get_note_status(line) != POSTPONED)
-		printf("%s\n", line);
+		output(line, is_odd_line);
 }
 
 
 /* Output notes which are postponed.
  * Called from show_notes when command line option -P
  * is used.
+ *
+ * Set is_odd_line to 1 if the line to be outputted is odd.
  */
-static void output_postponed(char *line)
+static void output_postponed(char *line, int is_odd_line)
 {
 	if (get_note_status(line) == POSTPONED)
-		printf("%s\n", line);
+		output(line, is_odd_line);
 }
 
 
 /* Output notes with status UNDONE.
  * Called when argument -u is passed for the program.
+ *
+ * Set is_odd_line to 1 if the line to be outputted is odd.
  */
-static void output_undone(char *line)
+static void output_undone(char *line, int is_odd_line)
 {
 	if (get_note_status(line) == UNDONE)
-		printf("%s\n", line);
+		output(line, is_odd_line);
+}
+
+
+/* Functions outputs one note line without the date part */
+static void output_without_date(char *line, int is_odd_line)
+{
+	char *token = strtok(line, "\t");
+
+	if (token != NULL)
+		printf("\t%s\t", token);
+	else
+		goto error;
+
+	token = strtok(NULL, "\t");
+
+	if (token != NULL)
+		printf("%s\t", token);
+	else
+		goto error;
+
+	token = strtok(NULL, "\t");
+	token = strtok(NULL, "\t");
+
+	if (token != NULL)
+		output(token, is_odd_line);
+	else
+		goto error;
+
+	return;
+
+error:
+	fail(stderr, "%s parsing line failed\n", __func__);
+
 }
 
 
@@ -1446,7 +1580,7 @@ static void show_latest(int n)
 
 			if (line) {
 				if (current > start)
-					printf("%s\n", line);
+					output(line, not_odd(current));
 				free(line);
 			}
 
