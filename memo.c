@@ -343,7 +343,7 @@ static int add_notes_from_stdin()
 	char ch;
 	char *line = NULL;
 
-	if ((buffer = (char*)malloc(sizeof(char) * length)) == NULL) {
+	if ((buffer = malloc(sizeof(char) * length)) == NULL) {
 		fail(stderr, "%s: malloc failed\n", __func__);
 		return -1;
 	}
@@ -396,7 +396,7 @@ static char *read_file_line(FILE *fp)
 	int length = 128;
 	char *buffer = NULL;
 
-	buffer = (char*)malloc(sizeof(char) * length);
+	buffer = malloc(sizeof(char) * length);
 
 	if (buffer == NULL) {
 		fail(stderr,"%s: malloc failed\n", __func__);
@@ -560,7 +560,7 @@ static char *get_note_date(char *line)
 		return NULL;
 	}
 
-	date = (char*)malloc((strlen(datetoken) + 1) * sizeof(char));
+	date = malloc((strlen(datetoken) + 1) * sizeof(char));
 
 	if (date == NULL) {
 		free(tmpline);
@@ -907,7 +907,7 @@ static NoteStatus_t get_note_status(const char *line)
 	if(strlen(line) == 0)
 		return status;
 
-	buffer = (char*)malloc((strlen(line) + 1) * sizeof(char));
+	buffer = malloc((strlen(line) + 1) * sizeof(char));
 
 	if (buffer == NULL) {
 		fail(stderr, "%s malloc failed\n", __func__);
@@ -1331,7 +1331,7 @@ static char *get_line_color(int is_odd_line)
 		color = get_memo_conf_value("LINE_COLOR");
 
 	if (!color) {
-		color = (char*)malloc((strlen(defaultclr) + 1) * sizeof(char));
+		color = malloc((strlen(defaultclr) + 1) * sizeof(char));
 		if (!color) {
 			fail(stderr, "%s malloc failed\n", __func__);
 			return NULL;
@@ -1675,7 +1675,7 @@ static char *get_memo_conf_path()
 	len = strlen(env) + 1;
 
 	/* +8 to have space for \"/.memorc\" */
-	conf_path = (char*)malloc( (len + 8) * sizeof(char));
+	conf_path = malloc( (len + 8) * sizeof(char));
 
 	if (conf_path == NULL) {
 		fail(stderr, "%s: malloc failed\n", __func__);
@@ -1753,7 +1753,7 @@ static char *get_memo_conf_value(const char *prop)
 				}
 
 				size_t len = strlen(token) + 1;
-				retval = (char*)malloc(len * sizeof(char));
+				retval = malloc(len * sizeof(char));
 
 				if (retval == NULL) {
 					fail(stderr,"%s malloc\n", __func__);
@@ -1805,7 +1805,7 @@ static char *get_memo_default_path()
 	len = strlen(env) + 1;
 
 	/* +6 to have space for \"/.memo\" */
-	path = (char*)malloc( (len + 6) * sizeof(char));
+	path = malloc( (len + 6) * sizeof(char));
 
 	if (path == NULL) {
 		fail(stderr,"%s: malloc failed\n", __func__);
@@ -1841,7 +1841,7 @@ static char *get_memo_file_path()
 	 * and use value from it as a path */
 	if (env_path != NULL) {
 		/* +1 for \0 byte */
-		path = (char*)malloc((strlen(env_path) + 1) * sizeof(char));
+		path = malloc((strlen(env_path) + 1) * sizeof(char));
 
 		if (path == NULL) {
 			fail(stderr, "%s malloc failed\n", __func__);
@@ -1899,7 +1899,7 @@ static char *get_temp_memo_path()
 	if (orig == NULL)
 		return NULL;
 
-	char *tmp = (char*)malloc(sizeof(char) * (strlen(orig) + 5));
+	char *tmp = malloc(sizeof(char) * (strlen(orig) + 5));
 
 	if (tmp == NULL) {
 		free(orig);
@@ -1947,7 +1947,7 @@ static char *note_part_replace(NotePart_t part, char *note_line, const char *dat
 	char *new_line = NULL;
 	int size = ((strlen(note_line) + strlen(data)) + 1) * sizeof(char);
 
-	new_line = (char*)malloc(size);
+	new_line = malloc(size);
 
 	if (new_line == NULL) {
 		fail(stderr, "%s: malloc failed\n", __func__);
@@ -2173,7 +2173,7 @@ static char *integer_to_string(int id)
 	/* Really, this should be enough space to hold our integer
 	 * for the note id... 
 	 */
-	buffer = (char*)malloc(15 * sizeof(char));
+	buffer = malloc(15 * sizeof(char));
 
 	if (buffer == NULL) {
 		fail(stderr, "%s: malloc failed\n", __func__);
