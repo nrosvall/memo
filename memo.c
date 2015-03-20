@@ -131,7 +131,7 @@ static char *get_line_color(int is_odd_line);
 static char *color_to_escape_seq(char *color);
 static int  not_odd(int n);
 
-#define VERSION 1.5
+#define VERSION 1.6
 
 
 /* Check if given date is in valid date format.
