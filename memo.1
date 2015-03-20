@@ -1,7 +1,7 @@
 .\" Manpage for memo.
 .\" Any errors or typos, contact niko@ideabyte.net.
 
-.TH man 1 "1 Jan 2015" "1.5" "memo man page"
+.TH man 1 "20 Mar 2015" "1.6" "memo man page"
 .SH NAME
 memo \- unix-style note-taking software
 .SH SYNOPSIS
@@ -85,22 +85,23 @@ can be marked as undone or done normally using -m or -M flag.
 Only undone notes can be postponed.
 .PP
 It's possible to change the location (and name) of the .memo
-file. Create $HOME/.memorc with a line MEMO_PATH=/path/you/would/like
-, Memo will use that path instead of the default $HOME/.memo path.
+file. Create $HOME/.memorc (or $XDG_CONFIG_HOME/.memorc) with a line
+MEMO_PATH=/path/you/would/like , Memo will use that path instead of the
+default $HOME/.memo path.
 .PP
 It's also possible to set memo path using an environment variable.
 For example: export MEMO_PATH=/path/to/some/file. If MEMO_PATH
 environment variable is set that will be used. If it's not set,
-Memo will try to read $HOME/.memorc. If the file does not exist
+Memo will try to read .memorc for MEMO_PATH. If the file does not exist
 or has errors, Memo will use $HOME/.memo file to store the notes.
 .PP
 Since version 1.3 -D option asks for confirmation before deleting all
-notes. It's possible to disable this confirmation via ~/.memorc
+notes. It's possible to disable this confirmation via .memorc
 property. To disable the confirmation add MEMO_CONFIRM_DELETE=no to
-~/.memorc file.
+ .memorc file.
 .PP
 Since version 1.5 it's possible to set a property MARK_AS_DONE in
-$HOME/.memorc. The property takes a valid date as a value. For example:
+ .memorc. The property takes a valid date as a value. For example:
 MARK_AS_DONE=2014-12-23. If the property is set Memo will mark all notes
 older than the property value as done automatically.
 .SH NOTES
@@ -113,9 +114,25 @@ your ~/.bashrc. Please note, that this is not a bug in Memo, or in
 Bash. It's a feature of Bash.
 .SH FILES
 .I $HOME/.memo
-.I $HOME/.memorc
+.I $HOME/.memorc, $XDG_CONFIG_HOME/.memorc
+.SH COLORS
+.PP
+Since version 1.6 Memo has support for colors. Color support can be
+enabled in .memorc by setting USE_COLORS=yes. By default Memo uses blue
+for odd lines and magenta for even lines. These can be modified
+via .memorc properties LINE_COLOR and ODD_LINE_COLOR. Supported colors
+are: 
+.IP red
+.IP cyan
+.IP green
+.IP blue
+.IP black
+.IP brown
+.IP magenta
+.IP gray
+.IP none
 .SH AUTHORS
-Written by Niko Rosvall, first version of help written by Jari Aalto.
+Written by Niko Rosvall and contributors.
 .SH COPYRIGHT
 Copyright (C) 2014-2015 Niko Rosvall <niko@ideabyte.net>
 .PP
