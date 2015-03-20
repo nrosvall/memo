@@ -1,3 +1,18 @@
+1.6: 2015-03-20
+    Version 1.6 released.
+
+    Memo now has support for colors. Colors are disabled by default,
+    but can be easily enabled via .memorc property USE_COLORS=yes.
+    See man page for more detailed information about how to
+    customize default colors. Colors are not supported on Windows.
+
+    Malloc return values are no longer casted. Casting malloc is unnecessary
+    in C.
+
+    Memo now supports $XDG_CONFIG_HOME environment variable
+    when looking for .memorc file. See the man page for more
+    information.
+
 1.5: 2015-01-01
     Version 1.5 released.
     
