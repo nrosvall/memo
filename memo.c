@@ -1342,7 +1342,8 @@ static char *get_line_color(int is_odd_line)
 	
 	char *value = color_to_escape_seq(color);
 	free(color);
-
+	free(usecolors);
+	
 	return value;
 }
 
@@ -1660,14 +1661,18 @@ static char *get_memo_conf_path()
 	char *conf_path = NULL;
 	size_t len = 0;
 
-	env = getenv("HOME");
+	env = getenv("XDG_CONFIG_HOME");
+
+	if (env == NULL)
+		env = getenv("HOME");
+	
 #ifdef _WIN32
 	if (env == NULL)
 		env = getenv("USERPROFILE");
 #endif
 
 	if (env == NULL){
-		fail(stderr,"%s: getenv(\"HOME\") failed\n", __func__);
+		fail(stderr,"%s: getenv failed\n", __func__);
 		return NULL;
 	}
 
