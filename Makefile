@@ -24,9 +24,10 @@ install: all
 		mkdir -p $(PREFIX)/share/man/man1;	\
 	fi
 	cp memo.1 $(PREFIX)/share/man/man1/
-	gzip $(PREFIX)/share/man/man1/memo.1
+	gzip -f $(PREFIX)/share/man/man1/memo.1
 	cp memo $(PREFIX)/bin/
 
 uninstall:
 	rm $(PREFIX)/bin/memo
 	rm $(PREFIX)/share/man/man1/memo.1.gz
+
