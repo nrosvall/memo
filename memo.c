@@ -129,7 +129,7 @@ static int   mark_old_as_done();
 static int   organize_note_identifiers();
 static char *get_line_color(int is_odd_line);
 static char *color_to_escape_seq(char *color);
-static int  not_odd(int n);
+static int  is_odd(int n);
 
 #define VERSION 1.6
 
@@ -498,6 +498,13 @@ static int show_notes(NoteStatus_t status)
 	int count = 0;
 	int lines = 0;
 
+	/* Output count is used to calculate even and odd lines
+	 * when outputting undone or postponed notes.
+	 * When outputting normally, lines is used as the counter.
+	 */
+	int postponed_output_count = 0;
+	int undone_output_count = 0;
+
 	fp = get_memo_file_ptr("r");
 
 	lines = count_file_lines(fp);
@@ -519,12 +526,29 @@ static int show_notes(NoteStatus_t status)
 		line = read_file_line(fp);
 
 		if (line) {
-			if (status == POSTPONED)
-				output_postponed(line, not_odd(lines));
-			else if (status == UNDONE)
-				output_undone(line, not_odd(lines));
-			else
-				output_default(line, not_odd(lines));
+
+			/* status is just used to know what kind of output we want.
+			 * we still need to check status the of the current line
+			 * separately.
+			 */
+			if (status == POSTPONED) {
+				if (get_note_status(line) == POSTPONED) {
+					postponed_output_count++;
+					int odd_p = is_odd(postponed_output_count);
+					output_postponed(line, odd_p);
+				}
+			}
+			else if (status == UNDONE) {
+				if (get_note_status(line) == UNDONE) {
+					undone_output_count++;
+					int odd_u = is_odd(undone_output_count);
+					output_undone(line, odd_u);
+				}
+			}
+			else {
+				output_default(line, is_odd(lines));
+			}
+			
 			free(line);
 		}
 
@@ -532,7 +556,7 @@ static int show_notes(NoteStatus_t status)
 	}
 
 	fclose(fp);
-
+	
 	return count;
 }
 
@@ -680,7 +704,7 @@ static int show_notes_tree()
 					}
 
 					if (strcmp(date, dates[i]) == 0)
-						output_without_date(line, not_odd(i));
+						output_without_date(line, is_odd(i));
 
 					free(line);
 					free(date);
@@ -790,7 +814,7 @@ static int search_notes(char *search)
 				char *foundptr = case_strstr(line, token);
 		    
 				if (foundptr){
-					output_default(line, not_odd(count));
+					output_default(line, is_odd(count));
 					count++;
 					free(foundptr);
 					/* found it, no point to continue */
@@ -854,7 +878,7 @@ static int search_regexp(const char *regexp)
 			ret = regexec(&regex, line, 0, NULL, 0);
 
 			if (ret == 0) {
-				output_default(line, not_odd(count));
+				output_default(line, is_odd(count));
 				count++;
 			} else if (ret != 0 && ret != REG_NOMATCH) {
 				/* Something went wrong while executing
@@ -1277,7 +1301,7 @@ static char *color_to_escape_seq(char *color)
 /* Function returns 1 if n is an even number.
  * 0 is returned if n is odd.
  */
-static int not_odd(int n)
+static int is_odd(int n)
 {
 	if ( n % 2)
 		return 1;
@@ -1562,6 +1586,7 @@ static void show_latest(int n)
 	int lines = 0;
 	int start;
 	int current = 0;
+	int output_count = 0;
 
 	fp = get_memo_file_ptr("r");
 
@@ -1580,8 +1605,10 @@ static void show_latest(int n)
 			line = read_file_line(fp);
 
 			if (line) {
-				if (current > start)
-					output(line, not_odd(current));
+				if (current > start) {
+					output_count++;
+					output(line, is_odd(output_count));
+				}
 				free(line);
 			}
 
