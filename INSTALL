@@ -29,4 +29,4 @@ How to install Memo from source code
 	   cp memo.1 /usr/local/share/man/man1/
 	   gzip /usr/local/share/man/man1/memo.1
 
-Any errors or improvements, please contact niko@ideabyte.net.
+Any errors or improvements, please contact niko@byteptr.com
