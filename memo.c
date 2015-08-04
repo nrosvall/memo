@@ -2492,7 +2492,7 @@ static void sort_dates_ascend(char *dates[], int date_index)
   for (int i = 0; i < date_index; i++) {
 		char *p = dates[i], *q = dates[i];
 		while((*p = *q++)) p += (*p != '-');
-  	dates_int[i] = atoi(dates[i]);
+		dates_int[i] = atoi(dates[i]);
   }
 
 	/* Sort the dates_int elements in ascending order. */
