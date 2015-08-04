@@ -2503,22 +2503,22 @@ static void sort_dates_ascend(char *dates[], int date_index)
    */
   for (int i = 0; i < date_index; i++) {
 		memset(dates[i], '\0', sizeof(*dates));
-
-  	/* Pick up the 4-digit year from dates_int[i]. */
-  	strcat(dates[i], integer_to_string(dates_int[i]/10000000));
-  	strcat(dates[i], integer_to_string((dates_int[i]/1000000) % 10));
-  	strcat(dates[i], integer_to_string((dates_int[i]/100000) % 10));
-  	strcat(dates[i], integer_to_string((dates_int[i]/10000) % 10));
-  	strcat(dates[i], "-");
-
-  	/* Pick up the 2-digit month from dates_int[i]. */
-  	strcat(dates[i], integer_to_string((dates_int[i]/1000) % 10));
-  	strcat(dates[i], integer_to_string((dates_int[i]/100) % 10));
-  	strcat(dates[i], "-");
-
-  	/* Pick up the 2-digit day from dates_int[i]. */
-  	strcat(dates[i], integer_to_string((dates_int[i]/10) % 10));
-  	strcat(dates[i], integer_to_string(dates_int[i] % 10));
+		
+		/* Pick up the 4-digit year from dates_int[i]. */
+		strcat(dates[i], integer_to_string(dates_int[i]/10000000));
+		strcat(dates[i], integer_to_string((dates_int[i]/1000000) % 10));
+		strcat(dates[i], integer_to_string((dates_int[i]/100000) % 10));
+		strcat(dates[i], integer_to_string((dates_int[i]/10000) % 10));
+		strcat(dates[i], "-");
+		
+		/* Pick up the 2-digit month from dates_int[i]. */
+		strcat(dates[i], integer_to_string((dates_int[i]/1000) % 10));
+		strcat(dates[i], integer_to_string((dates_int[i]/100) % 10));
+		strcat(dates[i], "-");
+		
+		/* Pick up the 2-digit day from dates_int[i]. */
+		strcat(dates[i], integer_to_string((dates_int[i]/10) % 10));
+		strcat(dates[i], integer_to_string(dates_int[i] % 10));
   }
 }
 
