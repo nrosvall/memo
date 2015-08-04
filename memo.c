@@ -130,6 +130,8 @@ static int   organize_note_identifiers();
 static char *get_line_color(int is_odd_line);
 static char *color_to_escape_seq(char *color);
 static int  is_odd(int n);
+static void sort_dates_ascend(char *dates[], int date_index);
+static int  int_sort(const void *a , const void *b);
 
 #define VERSION 1.6
 
@@ -666,17 +668,21 @@ static int show_notes_tree()
 			/* If dates does not contain date, store it
 			 * otherwise free it
 			 */
-			if (!has_date)
+			if (!has_date) {
 				dates[date_index] = date;
-			else
+				date_index++;
+			} else {
 				free(date);
+			}
 
-			date_index++;
 			count++;
 			free(line);
 		}
 		n--;
 	}
+
+  /* Sort the dates elements in the order of date. */
+  sort_dates_ascend(dates, date_index);
 
 	/* Loop through all dates and print all notes for
 	 * the date.
@@ -2471,6 +2477,64 @@ static void show_memo_file_path()
 		printf("%s\n", path);
 		free(path);
 	}
+}
+
+
+/* Function sorts the dates elements in the order of date.
+ * 
+ * Make the *dates[] again.
+ */
+static void sort_dates_ascend(char *dates[], int date_index) 
+{
+  int dates_int[date_index];
+
+	/* Remove "-" from the dates elements and convert them into integer. */
+  for (int i = 0; i < date_index; i++) {
+		char *p = dates[i], *q = dates[i];
+		while((*p = *q++)) p += (*p != '-');
+  	dates_int[i] = atoi(dates[i]);
+  }
+
+	/* Sort the dates_int elements in ascending order. */
+  qsort((void *)dates_int , date_index , sizeof(dates_int[0]), int_sort);
+
+  /* For each of dates_int elements, 
+   * make a string in valid date format ("yyyy-mm-dd") and reallocate it to dates.
+   */
+  for (int i = 0; i < date_index; i++) {
+		memset(dates[i], '\0', sizeof(*dates));
+
+  	/* Pick up the 4-digit year from dates_int[i]. */
+  	strcat(dates[i], integer_to_string(dates_int[i]/10000000));
+  	strcat(dates[i], integer_to_string((dates_int[i]/1000000) % 10));
+  	strcat(dates[i], integer_to_string((dates_int[i]/100000) % 10));
+  	strcat(dates[i], integer_to_string((dates_int[i]/10000) % 10));
+  	strcat(dates[i], "-");
+
+  	/* Pick up the 2-digit month from dates_int[i]. */
+  	strcat(dates[i], integer_to_string((dates_int[i]/1000) % 10));
+  	strcat(dates[i], integer_to_string((dates_int[i]/100) % 10));
+  	strcat(dates[i], "-");
+
+  	/* Pick up the 2-digit day from dates_int[i]. */
+  	strcat(dates[i], integer_to_string((dates_int[i]/10) % 10));
+  	strcat(dates[i], integer_to_string(dates_int[i] % 10));
+  }
+}
+
+
+/* Comparator function needed for qsort function.
+ *
+ * Returns 1 if *a > *b, 0 if *a = *b, -1 if *a < *b.
+ */
+static int int_sort(const void *a, const void *b) 
+{
+  if (*(int *)a < *(int *)b) {
+		return -1;
+  } else if (*(int *)a == *(int *)b) {
+		return 0;
+  }
+  return 1;
 }
 
 
