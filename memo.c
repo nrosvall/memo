@@ -2488,14 +2488,14 @@ static void sort_dates_ascend(char *dates[], int date_index)
 {
   int dates_int[date_index];
 
-	/* Remove "-" from the dates elements and convert them into integer. */
+  /* Remove "-" from the dates elements and convert them into integer. */
   for (int i = 0; i < date_index; i++) {
 		char *p = dates[i], *q = dates[i];
 		while((*p = *q++)) p += (*p != '-');
 		dates_int[i] = atoi(dates[i]);
   }
 
-	/* Sort the dates_int elements in ascending order. */
+  /* Sort the dates_int elements in ascending order. */
   qsort((void *)dates_int , date_index , sizeof(dates_int[0]), int_sort);
 
   /* For each of dates_int elements, 
