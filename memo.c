@@ -2502,7 +2502,7 @@ static void sort_dates_ascend(char *dates[], int date_index)
    * make a string in valid date format ("yyyy-mm-dd") and reallocate it to dates.
    */
   for (int i = 0; i < date_index; i++) {
-		memset(dates[i], '\0', sizeof(*dates));
+		dates[i][0] = '\0';
 		
 		/* Pick up the 4-digit year from dates_int[i]. */
 		strcat(dates[i], integer_to_string(dates_int[i]/10000000));
