@@ -681,8 +681,8 @@ static int show_notes_tree()
 		n--;
 	}
 
-  /* Sort the dates elements in the order of date. */
-  sort_dates_ascend(dates, date_index);
+	/* Sort the dates elements in the order of date. */
+	sort_dates_ascend(dates, date_index);
 
 	/* Loop through all dates and print all notes for
 	 * the date.
