@@ -43,6 +43,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -550,7 +551,7 @@ static int show_notes(NoteStatus_t status)
 			else {
 				output_default(line, is_odd(lines));
 			}
-			
+
 			free(line);
 		}
 
@@ -558,7 +559,7 @@ static int show_notes(NoteStatus_t status)
 	}
 
 	fclose(fp);
-	
+
 	return count;
 }
 
@@ -818,7 +819,7 @@ static int search_notes(char *search)
 			 */
 			while (token != NULL) {
 				char *foundptr = case_strstr(line, token);
-		    
+
 				if (foundptr){
 					output_default(line, is_odd(count));
 					count++;
@@ -829,7 +830,7 @@ static int search_notes(char *search)
 
 				token = strtok(NULL, " ");
 			}
-			
+
 			free(line);
 		}
 
@@ -1009,7 +1010,7 @@ static void mark_as_postponed(FILE *fp, char *line)
 static int get_note_id_from_line(const char *line)
 {
 	int id = -1;
-	
+
 	char *endptr;
 	id = strtol(line, &endptr, 10);
 
@@ -1181,13 +1182,13 @@ static int mark_old_as_done()
 		free(conf_path);
 		return -1;
 	}
-	
+
 	if (is_valid_date_format(date, 0) == -1) {
 
 		fail(stderr, "%s: error in ~/.memorc parsing\n", __func__);
 		free(date);
 		free(conf_path);
-		
+
 		return -1;
 	}
 
@@ -1201,13 +1202,13 @@ static int mark_old_as_done()
 
 		if (lines == -2)
 			fclose(fp);
-		
+
 		return -1;
 	}
 
 	int id_array[lines];
 	int id_count = 0;
-	
+
 	/* Convert MARK_AS_DONE property value string
 	 * to a valid date */
 	strptime(date, "%Y-%m-%d", &dc);
@@ -1231,7 +1232,7 @@ static int mark_old_as_done()
 				free(conf_path);
 				fclose(fp);
 			}
-			
+
 			time_t note_time;
 			struct tm nt = {0};
 
@@ -1245,7 +1246,7 @@ static int mark_old_as_done()
 				id_array[id_count] = id;
 				id_count++;
 			}
-		
+
 			free(curr_date);
 		}
 
@@ -1260,10 +1261,10 @@ static int mark_old_as_done()
 
 	/* Loop through all the note id codes and mark corresponding
 	 * notes as DONE
-	 */	
+	 */
 	for (int i = 0; i < id_count; i++)
 		mark_note_status(DONE, id_array[i]);
-	
+
 	return 0;
 }
 
@@ -1369,11 +1370,11 @@ static char *get_line_color(int is_odd_line)
 
 		strcpy(color, defaultclr);
 	}
-	
+
 	char *value = color_to_escape_seq(color);
 	free(color);
 	free(usecolors);
-	
+
 	return value;
 }
 
@@ -1698,7 +1699,7 @@ static char *get_memo_conf_path()
 
 	if (env == NULL)
 		env = getenv("HOME");
-	
+
 #ifdef _WIN32
 	if (env == NULL)
 		env = getenv("USERPROFILE");
@@ -2126,7 +2127,7 @@ static int replace_note(int id, const char *data)
 		char *line = read_file_line(fp);
 
 		if (line) {
-		       
+
 			int curr_id = get_note_id_from_line(line);
 			if (curr_id == id) {
 				/* Found the note to be replaced
@@ -2185,7 +2186,7 @@ static int replace_note(int id, const char *data)
 
 	fclose(fp);
 	fclose(tmpfp);
-	
+
 	if (file_exists(memofile))
 		remove(memofile);
 
@@ -2209,7 +2210,7 @@ static char *integer_to_string(int id)
 	char *buffer = NULL;
 
 	/* Really, this should be enough space to hold our integer
-	 * for the note id... 
+	 * for the note id...
 	 */
 	buffer = malloc(15 * sizeof(char));
 
@@ -2238,7 +2239,7 @@ static char *integer_to_string(int id)
  * as a part of some script)
  *
  * Returns 0 on success, -1 on failure.
- */ 
+ */
 static int organize_note_identifiers()
 {
 	FILE *tmpfp = NULL;
@@ -2310,7 +2311,7 @@ static int organize_note_identifiers()
 				fclose(tmpfp);
 				return -1;
 			}
-			
+
 			new_line = note_part_replace(NOTE_ID, line, id);
 
 			if (new_line == NULL) {
@@ -2321,7 +2322,7 @@ static int organize_note_identifiers()
 				fclose(tmpfp);
 				return -1;
 			}
-			
+
 			fprintf(tmpfp, "%s\n", new_line);
 			id_counter++;
 
@@ -2344,7 +2345,7 @@ static int organize_note_identifiers()
 
 	free(memofile);
 	free(tmpfile);
-	
+
 	return 0;
 }
 
@@ -2422,31 +2423,31 @@ SYNOPSIS\n\
 \n\
 OPTIONS\n\
 \n\
-    -a <content> [yyyy-MM-dd]        Add a new note with optional date\n\
-    -d <id>                          Delete note by id\n\
-    -D                               Delete all notes\n\
-    -e <format> <path>               Export notes a file\n\
-                                     Format must be either csv or html\n\
-    -f <search>                      Find notes by search term\n\
-    -F <regex>                       Find notes by regular expression\n\
-    -i                               Read from stdin until ^D\n\
-    -l <n>                           Show latest n notes\n\
-    -m <id>                          Mark note status as done\n\
-    -M <id>                          Mark note status as undone\n\
-    -o                               Show all notes organized by date\n\
-    -O                               Reorder and organize note id codes\n\
-    -p                               Show current memo file path\n\
-    -P [id]                          Show postponed or mark note as postponed\n\
-    -R                               Delete all notes marked as done\n\
-    -r <id> [content]/[yyyy-MM-dd]   Replace note content or date\n\
-    -s                               Show all notes except postponed\n\
-                                     (Same as simply running memo)\n\
-    -T                               Mark all notes as done\n\
-    -u                               Show only undone notes\n\
+    -a, --add <content> [yyyy-MM-dd]          Add a new note with optional date\n\
+    -d, --delete  <id>                        Delete note by id\n\
+    -D, --delete-all                          Delete all notes\n\
+    -e, --export <format> <path>              Export notes a file\n\
+                                              Format must be either csv or html\n\
+    -f, --search <search>                     Find notes by search term\n\
+    -F, --regex <regex>                       Find notes by regular expression\n\
+    -i, --stdin                               Read from stdin until ^D\n\
+    -l, --latest <n>                          Show latest n notes\n\
+    -m, --set-done <id>                       Mark note status as done\n\
+    -M, --set-undone <id>                     Mark note status as undone\n\
+    -o, --list-date                           Show all notes organized by date\n\
+    -O, --organize                            Reorder and organize note id codes\n\
+    -p, --path                                Show current memo file path\n\
+    -P, --postpone [id]                       Show postponed or mark note as postponed\n\
+    -R, --delete-done                         Delete all notes marked as done\n\
+    -r, --replace <id> [content]/[yyyy-MM-dd] Replace note content or date\n\
+    -s, --list                                Show all notes except postponed\n\
+                                              (Same as simply running memo)\n\
+    -T, --set-done-all                        Mark all notes as done\n\
+    -u, --list-undone                         Show only undone notes\n\
 \n\
-    -                                Read from stdin\n\
-    -h                               Show short help and exit. This page\n\
-    -V                               Show version number of program\n\
+    -                                         Read from stdin\n\
+    -h, --help                                Show short help and exit. This page\n\
+    -V, --version                             Show version number of program\n\
 \n\
 For more information and examples see man memo(1).\n\
 \n\
@@ -2481,10 +2482,10 @@ static void show_memo_file_path()
 
 
 /* Function sorts the dates elements in the order of date.
- * 
+ *
  * Make the *dates[] again.
  */
-static void sort_dates_ascend(char *dates[], int date_index) 
+static void sort_dates_ascend(char *dates[], int date_index)
 {
   int dates_int[date_index];
 
@@ -2498,24 +2499,24 @@ static void sort_dates_ascend(char *dates[], int date_index)
   /* Sort the dates_int elements in ascending order. */
   qsort((void *)dates_int , date_index , sizeof(dates_int[0]), int_sort);
 
-  /* For each of dates_int elements, 
+  /* For each of dates_int elements,
    * make a string in valid date format ("yyyy-mm-dd") and reallocate it to dates.
    */
   for (int i = 0; i < date_index; i++) {
 		dates[i][0] = '\0';
-		
+
 		/* Pick up the 4-digit year from dates_int[i]. */
 		strcat(dates[i], integer_to_string(dates_int[i]/10000000));
 		strcat(dates[i], integer_to_string((dates_int[i]/1000000) % 10));
 		strcat(dates[i], integer_to_string((dates_int[i]/100000) % 10));
 		strcat(dates[i], integer_to_string((dates_int[i]/10000) % 10));
 		strcat(dates[i], "-");
-		
+
 		/* Pick up the 2-digit month from dates_int[i]. */
 		strcat(dates[i], integer_to_string((dates_int[i]/1000) % 10));
 		strcat(dates[i], integer_to_string((dates_int[i]/100) % 10));
 		strcat(dates[i], "-");
-		
+
 		/* Pick up the 2-digit day from dates_int[i]. */
 		strcat(dates[i], integer_to_string((dates_int[i]/10) % 10));
 		strcat(dates[i], integer_to_string(dates_int[i] % 10));
@@ -2527,7 +2528,7 @@ static void sort_dates_ascend(char *dates[], int date_index)
  *
  * Returns 1 if *a > *b, 0 if *a = *b, -1 if *a < *b.
  */
-static int int_sort(const void *a, const void *b) 
+static int int_sort(const void *a, const void *b)
 {
   if (*(int *)a < *(int *)b) {
 		return -1;
@@ -2572,13 +2573,41 @@ int main(int argc, char *argv[])
 	 * property available in ~/.memorc
 	 */
 	mark_old_as_done();
-	
+
 	if (argc == 1) {
 		/* No arguments given, so just show notes */
 		show_notes(-1);
 	}
 
-	while ((c = getopt(argc, argv, "a:d:De:f:F:hil:m:M:oOpPr:RsTuV")) != -1){
+	static struct option long_options[] = {
+		{"add", required_argument, 0, 'a'},
+		{"delete", required_argument, 0, 'd'},
+		{"delete-all", no_argument, 0, 'D'},
+		{"export", required_argument, 0, 'e'},
+		{"search", required_argument, 0, 'f'},
+		{"regex", required_argument, 0, 'F'},
+		{"stdin", required_argument, 0, 'i'},
+		{"latest", required_argument, 0, 'l'},
+		{"set-done", required_argument, 0, 'm'},
+		{"set-undone", required_argument, 0, 'M'},
+		{"by-date", no_argument, 0, 'o'},
+		{"organize", no_argument, 0, 'O'},
+		{"path", no_argument, 0, 'p'},
+		{"postpone", no_argument, 0, 'P'},
+		{"delete-done", no_argument, 0, 'R'},
+		{"replace", required_argument, 0, 'r'},
+		{"list", no_argument, 0, 's'},
+		{"set-done-all", no_argument, 0, 'T'},
+		{"list-undone", no_argument, 0, 'T'},
+		{"help", no_argument, 0, 'h'},
+		{"version", no_argument, 0, 'V'},
+		{0, 0, 0, 0}
+	};
+
+	/* getopt_long stores the option index here. */
+	int option_index = 0;
+
+	while ((c = getopt_long(argc, argv, "a:d:De:f:F:hil:m:M:oOpPr:RsTuV", long_options, &option_index)) != -1){
 		has_valid_options = 1;
 
 		switch(c) {
