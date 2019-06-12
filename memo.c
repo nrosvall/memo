@@ -134,7 +134,7 @@ static int  is_odd(int n);
 static void sort_dates_ascend(char *dates[], int date_index);
 static int  int_sort(const void *a , const void *b);
 
-#define VERSION 1.6
+#define VERSION 1.7
 
 
 /* Check if given date is in valid date format.
@@ -2452,7 +2452,7 @@ OPTIONS\n\
 For more information and examples see man memo(1).\n\
 \n\
 AUTHORS\n\
-    Copyright (C) 2014-2015 Niko Rosvall <niko@byteptr.com>\n\
+    Copyright (C) 2014-2019 Niko Rosvall <niko@byteptr.com>\n\
 \n\
     Released under license GPL-3+. For more information, see\n\
     http://www.gnu.org/licenses\n\
