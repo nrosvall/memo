@@ -1,7 +1,7 @@
 .\" Manpage for memo.
 .\" Any errors or typos, contact niko@byteptr.com.
 
-.TH man 1 "20 Mar 2015" "1.6" "memo man page"
+.TH man 1 "12 Jun 2015" "1.7" "memo man page"
 .SH NAME
 memo \- unix-style note-taking software
 .SH SYNOPSIS
@@ -11,49 +11,49 @@ Memo is a note-taking software for POSIX compatible operating systems.
 The short notes are saved to user's home directory in ~/.memo file
 by default.
 .SH OPTIONS
-.IP "-a <content> [yyyy-MM-dd]"
+.IP "-a, --add <content> [yyyy-MM-dd]"
 Add a new note
-.IP "-d <id>"
+.IP "-d, --delete <id>"
 Delete note by id
-.IP -D
+.IP "-D, --delete-all"
 Delete all notes
-.IP "-e <format> <path>"
+.IP "-e, --export  <format> <path>"
 Export notes to a file. <format> must be either csv or html
-.IP "-f <search>"
+.IP "-f, --search <search>"
 Find notes by text search
-.IP "-F <regex>"
+.IP "-F --regex <regex>"
 Find notes by regular expression
-.IP -i
+.IP "-i, --stdin"
 Add multiple notes from stdin
-.IP "-l <n>"
+.IP "-l, --latest <n>"
 Show latest n notes
-.IP "-m <id>"
+.IP "-m, --set-done <id>"
 Mark note status as done
-.IP "-M <id>"
+.IP "-M, --set-undone <id>"
 Mark note status as undone
-.IP -o
+.IP "-o, --list-date"
 Show all notes organized by date
-.IP -O
+.IP "-O, --organize"
 Reorder and organize note id codes
-.IP -p
+.IP "-p, --path"
 Show current memo file path
-.IP "-P [id]"
+.IP "-P, --postpone [id]"
 Show postponed or mark note as postponed
-.IP -R
+.IP "-R, --delete-done"
 Delete all notes marked as done
-.IP "-r <id> [content]/[yyyy-MM-dd]"
+.IP "-r, --replace <id> [content]/[yyyy-MM-dd]"
 Replace note content or date
-.IP -s
+.IP "-s, --list"
 Show all notes except postponed. Same as typing command memo
-.IP -T
+.IP "-T, --set-done-all"
 Mark all notes as done
-.IP -u
+.IP "-u, --list-undone"
 Show only undone notes
 .IP -
 Read from stdin
-.IP -h
+.IP "-h, --help"
 Show short help and exit. This page
-.IP -V
+.IP "-V, --version"
 Show version number of program
 .SH EXAMPLES
 Add a new note:
@@ -134,7 +134,7 @@ are:
 .SH AUTHORS
 Written by Niko Rosvall and contributors.
 .SH COPYRIGHT
-Copyright (C) 2014-2015 Niko Rosvall <niko@byteptr.com>
+Copyright (C) 2014-2019 Niko Rosvall <niko@byteptr.com>
 .PP
 Released under license GPL-3+. For more information, see
 http://www.gnu.org/licenses
