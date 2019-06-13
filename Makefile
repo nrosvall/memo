@@ -7,12 +7,6 @@ endif
 
 all: memo
 
-memo: memo.o
-	$(CC) $(CFLAGS) memo.o -o memo $(LDFLAGS)
-
-memo.o: memo.c
-	$(CC) $(CFLAGS) -c memo.c
-
 clean:
 	rm -f memo *.o
 
