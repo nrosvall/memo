@@ -1,11 +1,11 @@
-DESTDIR?=
-PREFIX?=/usr/local
-MANPREFIX?=$(PREFIX)/man
+DESTDIR   ?=
+PREFIX    ?= /usr/local
+MANPREFIX ?= $(PREFIX)/man
 
-CFLAGS+=-std=c99 -Wall
+CFLAGS += -std=c99 -Wall
 
 ifeq ($(OS),Windows_NT)
-LDFLAGS+=-lpcre
+  LDFLAGS += -lpcre
 endif
 
 all: memo
