@@ -1,4 +1,3 @@
-CC=gcc
 override CFLAGS+=-std=c99 -Wall
 PREFIX=/usr/local
 LDFLAGS=
