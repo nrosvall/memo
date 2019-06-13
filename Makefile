@@ -22,3 +22,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/memo
 	rm -f $(DESTDIR)$(MANPREFIX)/man1/memo.1
 
+.PHONY: all clean install uninstall
