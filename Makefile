@@ -25,6 +25,6 @@ install: all
 	install -m644 memo.1 $(PREFIX)/share/man/man1/
 
 uninstall:
-	rm $(PREFIX)/bin/memo
-	rm $(PREFIX)/share/man/man1/memo.1
+	rm -f $(PREFIX)/bin/memo
+	rm -f $(PREFIX)/share/man/man1/memo.1
 
