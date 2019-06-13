@@ -1,5 +1,5 @@
 CFLAGS+=-std=c99 -Wall
-PREFIX=/usr/local
+PREFIX?=/usr/local
 
 ifeq ($(OS),Windows_NT)
 LDFLAGS+=-lpcre
