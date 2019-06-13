@@ -1,5 +1,7 @@
-CFLAGS+=-std=c99 -Wall
 PREFIX?=/usr/local
+MANPREFIX?=$(PREFIX)/man
+
+CFLAGS+=-std=c99 -Wall
 
 ifeq ($(OS),Windows_NT)
 LDFLAGS+=-lpcre
@@ -11,11 +13,11 @@ clean:
 	rm -f memo *.o
 
 install: all
-	install -d $(PREFIX)/bin $(PREFIX)/share/man/man1
+	install -d $(PREFIX)/bin $(MANPREFIX)/man1
 	install -m755 memo $(PREFIX)/bin/
-	install -m644 memo.1 $(PREFIX)/share/man/man1/
+	install -m644 memo.1 $(MANPREFIX)/man1/
 
 uninstall:
 	rm -f $(PREFIX)/bin/memo
-	rm -f $(PREFIX)/share/man/man1/memo.1
+	rm -f $(MANPREFIX)/man1/memo.1
 
