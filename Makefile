@@ -14,8 +14,7 @@ memo.o: memo.c
 	$(CC) $(CFLAGS) -c memo.c
 
 clean:
-	rm memo
-	rm *.o
+	rm -f memo *.o
 
 install: all
 	install -d $(PREFIX)/bin $(PREFIX)/share/man/man1
