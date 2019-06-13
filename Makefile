@@ -20,11 +20,9 @@ clean:
 	rm *.o
 
 install: all
-	if [ ! -d $(PREFIX)/share/man/man1 ];then	\
-		mkdir -p $(PREFIX)/share/man/man1;	\
-	fi
-	cp memo.1 $(PREFIX)/share/man/man1/
-	cp memo $(PREFIX)/bin/
+	install -d $(PREFIX)/bin $(PREFIX)/share/man/man1
+	install -m755 memo $(PREFIX)/bin/
+	install -m644 memo.1 $(PREFIX)/share/man/man1/
 
 uninstall:
 	rm $(PREFIX)/bin/memo
