@@ -1,9 +1,8 @@
 CFLAGS+=-std=c99 -Wall
 PREFIX=/usr/local
-LDFLAGS=
 
 ifeq ($(OS),Windows_NT)
-LDFLAGS=-lpcre
+LDFLAGS+=-lpcre
 endif
 
 all: memo
