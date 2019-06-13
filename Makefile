@@ -1,3 +1,4 @@
+DESTDIR?=
 PREFIX?=/usr/local
 MANPREFIX?=$(PREFIX)/man
 
@@ -13,11 +14,11 @@ clean:
 	rm -f memo *.o
 
 install: all
-	install -d $(PREFIX)/bin $(MANPREFIX)/man1
-	install -m755 memo $(PREFIX)/bin/
-	install -m644 memo.1 $(MANPREFIX)/man1/
+	install -d $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(MANPREFIX)/man1
+	install -m755 memo $(DESTDIR)$(PREFIX)/bin/
+	install -m644 memo.1 $(DESTDIR)$(MANPREFIX)/man1/
 
 uninstall:
-	rm -f $(PREFIX)/bin/memo
-	rm -f $(MANPREFIX)/man1/memo.1
+	rm -f $(DESTDIR)$(PREFIX)/bin/memo
+	rm -f $(DESTDIR)$(MANPREFIX)/man1/memo.1
 
