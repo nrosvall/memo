@@ -1,33 +1,25 @@
-CC=gcc
-override CFLAGS+=-std=c99 -Wall
-PREFIX=/usr/local
-LDFLAGS=
+DESTDIR   ?=
+PREFIX    ?= /usr/local
+MANPREFIX ?= $(PREFIX)/man
+
+CFLAGS += -std=c99 -Wall
 
 ifeq ($(OS),Windows_NT)
-LDFLAGS=-lpcre
+  LDFLAGS += -lpcre
 endif
 
 all: memo
 
-memo: memo.o
-	$(CC) $(CFLAGS) memo.o -o memo $(LDFLAGS)
-
-memo.o: memo.c
-	$(CC) $(CFLAGS) -c memo.c
-
 clean:
-	rm memo
-	rm *.o
+	rm -f memo *.o
 
 install: all
-	if [ ! -d $(PREFIX)/share/man/man1 ];then	\
-		mkdir -p $(PREFIX)/share/man/man1;	\
-	fi
-	cp memo.1 $(PREFIX)/share/man/man1/
-	gzip -f $(PREFIX)/share/man/man1/memo.1
-	cp memo $(PREFIX)/bin/
+	install -d $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(MANPREFIX)/man1
+	install -m755 memo $(DESTDIR)$(PREFIX)/bin/
+	install -m644 memo.1 $(DESTDIR)$(MANPREFIX)/man1/
 
 uninstall:
-	rm $(PREFIX)/bin/memo
-	rm $(PREFIX)/share/man/man1/memo.1.gz
+	rm -f $(DESTDIR)$(PREFIX)/bin/memo
+	rm -f $(DESTDIR)$(MANPREFIX)/man1/memo.1
 
+.PHONY: all clean install uninstall
