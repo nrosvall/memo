@@ -2586,7 +2586,7 @@ int main(int argc, char *argv[])
 		{"export", required_argument, 0, 'e'},
 		{"search", required_argument, 0, 'f'},
 		{"regex", required_argument, 0, 'F'},
-		{"stdin", required_argument, 0, 'i'},
+		{"stdin", no_argument, 0, 'i'},
 		{"latest", required_argument, 0, 'l'},
 		{"set-done", required_argument, 0, 'm'},
 		{"set-undone", required_argument, 0, 'M'},
