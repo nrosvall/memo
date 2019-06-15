@@ -2530,12 +2530,14 @@ static void sort_dates_ascend(char *dates[], int date_index)
  */
 static int int_sort(const void *a, const void *b)
 {
-  if (*(int *)a < *(int *)b) {
-		return -1;
-  } else if (*(int *)a == *(int *)b) {
-		return 0;
-  }
-  return 1;
+    if (*(int *)a < *(int *)b) {
+        return -1;
+    }
+    else if (*(int *)a == *(int *)b) {
+        return 0;
+    }
+
+    return 1;
 }
 
 
