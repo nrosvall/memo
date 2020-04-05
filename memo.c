@@ -1,6 +1,6 @@
 /* Memo is a Unix-style note-taking software.
  *
- * Copyright (C) 2014-2019 Niko Rosvall <niko@byteptr.com>
+ * Copyright (C) 2014-2020 Niko Rosvall <niko@byteptr.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ static int  is_odd(int n);
 static void sort_dates_ascend(char *dates[], int date_index);
 static int  int_sort(const void *a , const void *b);
 
-#define VERSION 1.7
+#define VERSION 1.7.1
 
 
 /* Check if given date is in valid date format.
