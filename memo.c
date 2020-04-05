@@ -134,7 +134,7 @@ static int  is_odd(int n);
 static void sort_dates_ascend(char *dates[], int date_index);
 static int  int_sort(const void *a , const void *b);
 
-#define VERSION 1.7.1
+#define VERSION "1.7.1"
 
 
 /* Check if given date is in valid date format.
@@ -2699,7 +2699,7 @@ int main(int argc, char *argv[])
 			show_notes(UNDONE);
 			break;
 		case 'V':
-			printf("Memo version %.1f\n", VERSION);
+			printf("Memo version %s\n", VERSION);
 			break;
 		case '?':
 			if (optopt == 'a')
