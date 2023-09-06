@@ -7,4 +7,4 @@ under Cygwin, but it's not actively tested under it.
 
 Memo is licenced under the GPL.
 
-For more, see [homepage](https://www.nrosvall.name/memo/).
+For more, see [homepage](https://www.byteptr.com/memo/).
